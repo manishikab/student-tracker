@@ -19,13 +19,21 @@ def create_todo(todo: schemas.TodoCreate, db: Session = Depends(get_db)):
 def get_todos(db: Session = Depends(get_db)):
     return db.query(models.TodoItem).all()
 
-# Mark completed
-@router.patch("/{todo_id}/complete", response_model=schemas.Todo)
-def mark_todo_completed(todo_id: int, completed: bool, db: Session = Depends(get_db)):
-    todo = db.query(models.TodoItem).filter(models.TodoItem.id == todo_id).first()
-    if not todo:
-        raise HTTPException(status_code=404, detail="Todo not found")
-    todo.completed = completed
+# Mark completed or update text
+@router.put("/{todo_id}", response_model=schemas.Todo)
+def update_todo(todo_id: int, todo: schemas.TodoUpdate, db: Session = Depends(get_db)):
+    db_todo = db.query(models.TodoItem).filter(models.TodoItem.id == todo_id).first()
+    if todo.completed is not None:
+        db_todo.completed = todo.completed
+
     db.commit()
-    db.refresh(todo)
-    return todo
+    db.refresh(db_todo)
+    return db_todo
+
+# Delete Todo Task
+@router.delete("/{todo_id}")
+def delete_todo(todo_id: int, db: Session = Depends(get_db)):
+    db_todo = db.query(models.TodoItem).filter(models.TodoItem.id == todo_id).first()
+    db.delete(db_todo)
+    db.commit()
+    return

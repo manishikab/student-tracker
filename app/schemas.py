@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from datetime import date
+from typing import Optional
 
 # Todo schemas
 class TodoBase(BaseModel):
@@ -8,6 +9,10 @@ class TodoBase(BaseModel):
 
 class TodoCreate(TodoBase):
     pass
+
+class TodoUpdate(BaseModel):
+    title: Optional[str] = None
+    completed: Optional[bool] = None
 
 class Todo(TodoBase):
     id: int
