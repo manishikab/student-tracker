@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from .. import models, schemas
 from ..database import get_db
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy import func
 
 router = APIRouter(prefix="/sleep", tags=["sleep"])
@@ -24,7 +24,7 @@ def get_sleep_entries(db: Session = Depends(get_db)):
 # View Average
 @router.get("/weekly_average")
 def weekly_average(db: Session = Depends(get_db)):
-    today = datetime.now(datetime.timezone.utc).date()
+    today = datetime.now(timezone.utc).date()
     one_week_ago = today - timedelta(days=7)
 
     avg_sleep = (
@@ -33,5 +33,10 @@ def weekly_average(db: Session = Depends(get_db)):
         .scalar()
     )
 
-    return {"week_start": one_week_ago, "week_end:": today, "average_hours": round(avg_sleep or 0, 2)}
-    
+    return {"week_start": one_week_ago, "week_end": today, "average_hours": round(avg_sleep or 0, 2)}
+
+@router.delete("/{sleep_id}")
+def delete_sleep(sleep_id: int, db: Session = Depends(get_db)):
+    entry = db.query(models.SleepEntry).filter(models.SleepEntry.id == sleep_id).first()
+    db.delete(entry)
+    db.commit()
