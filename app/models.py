@@ -19,9 +19,9 @@ class SleepEntry(Base):
 
 # Wellness model
 class WellnessEntry(Base):
-    __tablename__ = "wellness_entires"
+    __tablename__ = "wellness_entries"
     id = Column(Integer, primary_key=True, index=True)
-    title = Column(Date, index=True)
+    date = Column(Date)
     mood = Column(Integer)
     energy = Column(Integer)
     notes = Column(String, nullable=True)
