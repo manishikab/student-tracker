@@ -11,7 +11,8 @@ export default function App() {
   return (
     <Router>
       <nav>
-        <Link to="/" style={{ marginRight: "1rem" }}>Home</Link>
+        <Link to="/" style={{ marginLeft: "1rem", marginRight: "1rem" }}>Home</Link>
+        <Link to="https://calendar.google.com" >GCal</Link> |{" "}
         <Link to="/todos">Todos</Link> |{" "}
         <Link to="/sleep">Sleep Tracker</Link> |{" "}
         <Link to="/wellness">Wellness Tracker</Link> |{" "}
