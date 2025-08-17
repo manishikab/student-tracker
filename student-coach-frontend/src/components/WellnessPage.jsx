@@ -1,5 +1,5 @@
 import styles from "../WellnessPage.module.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect , useContext } from "react";
 import { getWellnessEntries, postWellnessEntry, deleteWellnessEntry } from "../api/wellnessAPI.js";
 import {
   LineChart,
@@ -11,7 +11,11 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
+import { DashboardContext } from "../DashboardContext";
+
+
 export default function WellnessPage() {
+  const {wellnessStatus, setWellnessStatus} = useContext(DashboardContext);
   const [entries, setEntries] = useState([]);
   const [mood, setMood] = useState("");
   const [energy, setEnergy] = useState("");
@@ -75,6 +79,7 @@ export default function WellnessPage() {
     const thisWeek = entries.filter((e) => new Date(e.date) >= oneWeekAgo);
     if (!thisWeek.length) {
       setTrend(null);
+      setWellnessStatus(0);
       return;
     }
 
@@ -87,6 +92,7 @@ export default function WellnessPage() {
     else message = "Steady week! Keep it up 🙂";
 
     setTrend(message);
+    setWellnessStatus(avgMood);
   }
 
   // Emoji helpers

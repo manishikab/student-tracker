@@ -1,7 +1,9 @@
 import styles from "../SleepPage.module.css";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect , useContext} from "react";
 import { getSleepEntries, postSleepEntry, getSleepAverage, deleteSleepEntry} from "../api/sleepApi.js";
+
+import { DashboardContext } from "../DashboardContext";
 
 import {
   LineChart,
@@ -15,6 +17,7 @@ import {
 
 
 export default function SleepPage() {
+  const { sleepHours, setSleepHours } = useContext(DashboardContext)
   const [sleeps, setSleeps] = useState([]);
   const [hours, setHours] = useState("");
   const [date, setDate] = useState("");
@@ -59,7 +62,6 @@ export default function SleepPage() {
     console.error(err);
     alert("Failed to save sleep entry.");
   }
-    const created = await postSleepEntry({hours: Number(hours), date});
     const updated = [...sleeps, created].sort(
       (a, b) => new Date(a.date) - new Date(b.date)
     );
@@ -82,6 +84,7 @@ export default function SleepPage() {
   function calculateTrend(entries) {
     if (!entries.length) {
       setTrend(null);
+      setExerciseMinutes(0);
       return;
     }
 
@@ -114,6 +117,9 @@ export default function SleepPage() {
     } else {
       setTrend("Your sleep is about the same as last week!");
     }
+
+    setSleepHours(avgThisWeek);
+    
   }
 
 

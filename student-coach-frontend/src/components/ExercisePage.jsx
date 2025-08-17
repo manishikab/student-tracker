@@ -1,5 +1,5 @@
 import styles from "../ExercisePage.module.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { getExerciseEntries, postExerciseEntry, deleteExerciseEntry } from "../api/exerciseApi.js";
 import {
   LineChart,
@@ -10,8 +10,11 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { DashboardContext } from "../DashboardContext";
 
 export default function ExercisePage() {
+  const { exerciseMinutes, setExerciseMinutes } = useContext(DashboardContext);
+
   const [entries, setEntries] = useState([]);
   const [date, setDate] = useState("");
   const [title, setTitle] = useState("");
@@ -27,16 +30,15 @@ export default function ExercisePage() {
   }, []);
 
   async function fetchExerciseEntries() {
-  const data = await getExerciseEntries();
-  // Make sure duration is a number
-  const normalized = data.map((e) => ({
-    ...e,
-    duration: Number(e.duration) || 0,
-  }));
-  const sorted = normalized.sort((a, b) => new Date(a.date) - new Date(b.date));
-  setEntries(sorted);
-  calculateTrend(sorted);
-}
+    const data = await getExerciseEntries();
+    const normalized = data.map((e) => ({
+      ...e,
+      duration: Number(e.duration) || 0,
+    }));
+    const sorted = normalized.sort((a, b) => new Date(a.date) - new Date(b.date));
+    setEntries(sorted);
+    calculateTrend(sorted);
+  }
 
   async function handleAddEntry() {
     if (!date || !title || !duration) {
@@ -49,17 +51,15 @@ export default function ExercisePage() {
     }
 
     const created = await postExerciseEntry({
-  date,
-  title,
-  duration,  // already a number
-  intensity: intensity || null,
-  notes: notes || null,
-});
+      date,
+      title,
+      duration,
+      intensity: intensity || null,
+      notes: notes || null,
+    });
 
-   const updated = [...entries, {
-  ...created,
-  duration: Number(created.duration) || 0
-}].sort((a, b) => new Date(a.date) - new Date(b.date));
+    const updated = [...entries, { ...created, duration: Number(created.duration) || 0 }]
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
 
     setEntries(updated);
     setDate("");
@@ -82,6 +82,7 @@ export default function ExercisePage() {
     if (!entries.length) {
       setTrend(null);
       setWeeklyTotal(0);
+      setExerciseMinutes(0); // Update dashboard
       return;
     }
 
@@ -98,13 +99,12 @@ export default function ExercisePage() {
     );
 
     const totalThisWeek = thisWeek.reduce((sum, e) => sum + e.duration, 0);
-    const totalLastWeek = lastWeek.reduce((sum, e) => sum + e.duration, 0);
-
     setWeeklyTotal(totalThisWeek);
+    setExerciseMinutes(totalThisWeek); // Update dashboard context
 
-    if (totalThisWeek > totalLastWeek) {
+    if (totalThisWeek > lastWeek.reduce((sum, e) => sum + e.duration, 0)) {
       setTrend("You're exercising more this week! 💪");
-    } else if (totalThisWeek < totalLastWeek) {
+    } else if (totalThisWeek < lastWeek.reduce((sum, e) => sum + e.duration, 0)) {
       setTrend("You exercised less than last week 😅");
     } else {
       setTrend("Your exercise is about the same as last week.");
@@ -117,47 +117,17 @@ export default function ExercisePage() {
 
       {/* Add Exercise Entry */}
       <div className={styles.addEntry}>
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className={styles.input}
-        />
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Title"
-          className={styles.input}
-        />
-        <input
-  type="number"
-  value={duration}
-  onChange={(e) => setDuration(Number(e.target.value))}
-  placeholder="Duration (min)"
-  className={styles.input}
-/>
-        <select
-          value={intensity}
-          onChange={(e) => setIntensity(e.target.value)}
-          className={styles.input}
-        >
+        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={styles.input} />
+        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" className={styles.input} />
+        <input type="number" value={duration} onChange={(e) => setDuration(Number(e.target.value))} placeholder="Duration (min)" className={styles.input} />
+        <select value={intensity} onChange={(e) => setIntensity(e.target.value)} className={styles.input}>
           <option value="">Intensity</option>
           <option value="Low">Low</option>
           <option value="Medium">Medium</option>
           <option value="High">High</option>
         </select>
-        <input
-          type="text"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Notes (optional)"
-          className={styles.input}
-        />
-
-        <button onClick={handleAddEntry} className={styles.button}>
-          Add
-        </button>
+        <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notes (optional)" className={styles.input} />
+        <button onClick={handleAddEntry} className={styles.button}>Add</button>
         {error && <div style={{ color: "red", marginTop: "0.5rem" }}>{error}</div>}
       </div>
 
@@ -174,7 +144,6 @@ export default function ExercisePage() {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="date" />
             <YAxis domain={[0, 'dataMax + 10']} />
-
             <Tooltip />
             <Line type="monotone" dataKey="duration" stroke="#60a5fa" strokeWidth={2} dot />
           </LineChart>
@@ -186,13 +155,10 @@ export default function ExercisePage() {
         {entries.map((e) => (
           <li key={e.id} className={styles.entryItem}>
             <div>
-              <strong>{e.date}</strong> — {e.title} | {e.duration} min{" "}
-              {e.intensity && `| Intensity: ${e.intensity}`}
+              <strong>{e.date}</strong> — {e.title} | {e.duration} min {e.intensity && `| Intensity: ${e.intensity}`}
             </div>
             {e.notes && <div>Notes: {e.notes}</div>}
-            <button onClick={() => handleDeleteEntry(e.id)} className={styles.button}>
-              Delete
-            </button>
+            <button onClick={() => handleDeleteEntry(e.id)} className={styles.button}>Delete</button>
           </li>
         ))}
       </ul>
