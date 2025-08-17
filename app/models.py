@@ -7,6 +7,7 @@ class TodoItem(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True)
     description = Column(String, nullable=True)
+    category = Column(String, default="today")
     completed = Column(Boolean, default=False)
 
 # Sleep model
@@ -28,8 +29,10 @@ class WellnessEntry(Base):
 
 # Excercise Model
 class ExerciseEntry(Base):
-    __tablename__ = "exercise_entires"
+    __tablename__ = "exercise_entries"  # fix typo too
     id = Column(Integer, primary_key=True, index=True)
     date = Column(Date, index=True)
     title = Column(String, index=True)
+    duration = Column(Integer, nullable=False)  # add this
+    intensity = Column(String, nullable=True)   # add this
     notes = Column(String, nullable=True)

@@ -6,6 +6,8 @@ from typing import Optional
 class TodoBase(BaseModel):
     title: str
     description: str | None = None
+    category: Optional[str] = "today" 
+    completed: bool = False
 
 class TodoCreate(TodoBase):
     pass
@@ -55,10 +57,11 @@ class WellnessEntry(WellnessEntryBase):
 
 # Exercise schemas
 class ExerciseEntryBase(BaseModel):
-     date: date
-     title: str
-     notes: str | None = None
-
+    date: date
+    title: str
+    duration: int 
+    intensity: str | None = None 
+    notes: str | None = None
 class ExerciseEntryCreate(ExerciseEntryBase):
     pass
 
