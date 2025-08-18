@@ -24,52 +24,55 @@ export default function ExercisePage() {
   const [trend, setTrend] = useState(null);
   const [weeklyTotal, setWeeklyTotal] = useState(0);
   const [error, setError] = useState("");
+  const [chartData, setChartData] = useState([]); 
 
   useEffect(() => {
     fetchExerciseEntries();
   }, []);
 
   async function fetchExerciseEntries() {
-    const data = await getExerciseEntries();
-    const normalized = data.map((e) => ({
-      ...e,
-      duration: Number(e.duration) || 0,
-    }));
-    const sorted = normalized.sort((a, b) => new Date(a.date) - new Date(b.date));
-    setEntries(sorted);
-    calculateTrend(sorted);
-  }
+  const data = await getExerciseEntries();
+  const normalized = data.map((e) => ({
+    ...e,
+    duration: Number(e.duration) || 0,
+  })).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  setEntries(normalized);             // raw list
+  setChartData(aggregateByDate(normalized)); // aggregated for chart
+  calculateTrend(normalized);
+}
+
+function aggregateByDate(entries) {
+  const grouped = entries.reduce((acc, entry) => {
+    if (!acc[entry.date]) acc[entry.date] = 0;
+    acc[entry.date] += entry.duration;
+    return acc;
+  }, {});
+
+  return Object.entries(grouped)
+    .map(([date, duration]) => ({ date, duration }))
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+}
 
   async function handleAddEntry() {
-    if (!date || !title || !duration) {
-      setError("Date, Title, and Duration are required.");
-      return;
-    }
-    if (duration <= 0 || duration > 360) {
-      setError("Duration must be between 1 and 360 minutes.");
-      return;
-    }
-
-    const created = await postExerciseEntry({
-      date,
-      title,
-      duration,
-      intensity: intensity || null,
-      notes: notes || null,
-    });
-
-    const updated = [...entries, { ...created, duration: Number(created.duration) || 0 }]
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
-
-    setEntries(updated);
-    setDate("");
-    setTitle("");
-    setDuration("");
-    setIntensity("");
-    setNotes("");
-    setError("");
-    calculateTrend(updated);
+  if (!date || !title || !duration) {
+    setError("Date, Title, and Duration are required.");
+    return;
   }
+  if (duration <= 0 || duration > 360) {
+    setError("Duration must be between 1 and 360 minutes.");
+    return;
+  }
+
+  const created = await postExerciseEntry({ date, title, duration, intensity: intensity || null, notes: notes || null });
+  const updated = [...entries, { ...created, duration: Number(created.duration) || 0 }]
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  setEntries(updated);              // raw list
+  setChartData(aggregateByDate(updated)); // aggregated for chart
+  setDate(""); setTitle(""); setDuration(""); setIntensity(""); setNotes(""); setError("");
+  calculateTrend(updated);
+}
 
   async function handleDeleteEntry(id) {
     await deleteExerciseEntry(id);
@@ -140,13 +143,13 @@ export default function ExercisePage() {
       {/* Chart */}
       <div style={{ width: "100%", maxWidth: "600px", height: "300px", marginBottom: "2rem" }}>
         <ResponsiveContainer>
-          <LineChart data={entries}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
-            <YAxis domain={[0, 'dataMax + 10']} />
-            <Tooltip />
-            <Line type="monotone" dataKey="duration" stroke="#60a5fa" strokeWidth={2} dot />
-          </LineChart>
+          <LineChart data={chartData}>
+  <CartesianGrid strokeDasharray="3 3" />
+  <XAxis dataKey="date" />
+  <YAxis domain={[0, 'dataMax + 10']} />
+  <Tooltip />
+  <Line type="monotone" dataKey="duration" stroke="#60a5fa" strokeWidth={2} dot />
+</LineChart>
         </ResponsiveContainer>
       </div>
 

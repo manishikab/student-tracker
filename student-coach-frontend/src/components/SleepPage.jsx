@@ -25,6 +25,7 @@ export default function SleepPage() {
   const [error, setError] = useState("");
   const [goal, setGoal] = useState(8); // 🎯 Default sleep goal
   const [trend, setTrend] = useState(null);
+  const [chartData, setChartData] = useState([]);
 
   // Fetch sleep entries from backend on mount
   useEffect(() => {
@@ -33,12 +34,11 @@ export default function SleepPage() {
   }, []);
 
   async function fetchSleepEntries() {
-    const data = await getSleepEntries();
-    const sorted = data.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-    setSleeps(sorted);
-    calculateTrend(sorted);
-  }
+  const data = await getSleepEntries();
+  setSleeps(data);
+  setChartData(aggregateByDate(data)); // only for chart
+  calculateTrend(data); // trend can use raw or aggregated depending on your goal
+}
 
   async function fetchSleepAverage(){
     const avg = await getSleepAverage();
@@ -46,31 +46,26 @@ export default function SleepPage() {
   }
 
   async function handleAddSleep() {
-    if (!hours || !date) return;
-    if (hours < 0 || hours > 24) {
+  if (!hours || !date) return;
+  if (hours < 0 || hours > 24) {
     setError("Hours must be between 0 and 24");
     return;
   }
 
   try {
     const created = await postSleepEntry({ hours: Number(hours), date });
-    setSleeps([...sleeps, created]);
+    const updated = [...sleeps, created];
+    setSleeps(updated); // keep raw
+    setChartData(aggregateByDate(updated)); // aggregated for chart
     setHours("");
     setDate("");
     fetchSleepAverage();
+    calculateTrend(updated);
   } catch (err) {
     console.error(err);
     alert("Failed to save sleep entry.");
   }
-    const updated = [...sleeps, created].sort(
-      (a, b) => new Date(a.date) - new Date(b.date)
-    );
-    setSleeps(updated);
-    setHours("");
-    setDate("");
-    fetchSleepAverage();
-    calculateTrend(updated)
-  }
+}
 
   async function handleDeleteSleep(id) {
     await deleteSleepEntry(id);
@@ -79,6 +74,21 @@ export default function SleepPage() {
     fetchSleepAverage(); 
     calculateTrend(updated);
   }
+
+  function aggregateByDate(entries) {
+  const grouped = entries.reduce((acc, entry) => {
+    if (!acc[entry.date]) {
+      acc[entry.date] = 0;
+    }
+    acc[entry.date] += entry.hours;
+    return acc;
+  }, {});
+
+  // Convert back to array sorted by date
+  return Object.entries(grouped)
+    .map(([date, hours]) => ({ date, hours }))
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+}
 
   // 📈 Calculate trend (this week vs last week average)
   function calculateTrend(entries) {
@@ -173,13 +183,13 @@ export default function SleepPage() {
       {/* Chart */}
       <div style={{ width: "100%", maxWidth: "600px", height: "300px", marginBottom: "2rem" }}>
         <ResponsiveContainer>
-          <LineChart data={sleeps}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
-            <YAxis domain={[0, 12]} />
-            <Tooltip />
-            <Line type="monotone" dataKey="hours" stroke="#f472b6" strokeWidth={2} dot />
-          </LineChart>
+          <LineChart data={chartData}>
+  <CartesianGrid strokeDasharray="3 3" />
+  <XAxis dataKey="date" />
+  <YAxis domain={[0, 12]} />
+  <Tooltip />
+  <Line type="monotone" dataKey="hours" stroke="#f472b6" strokeWidth={2} dot />
+</LineChart>
         </ResponsiveContainer>
       </div>
 
