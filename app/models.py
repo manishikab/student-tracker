@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, Float, Date
+from sqlalchemy import Column, Integer, String, Boolean, Float, Date, DateTime, func
 from .database import Base
 
 # Todo model
@@ -36,3 +36,12 @@ class ExerciseEntry(Base):
     duration = Column(Integer, nullable=False)  # add this
     intensity = Column(String, nullable=True)   # add this
     notes = Column(String, nullable=True)
+
+# Homepage
+class Goal(Base):
+    __tablename__ = "goals"
+
+    id = Column(Integer, primary_key=True, index=True)
+    text = Column(String, nullable=False)
+    done = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())

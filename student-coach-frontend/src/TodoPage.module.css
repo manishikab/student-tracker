@@ -1,6 +1,6 @@
 /* Container & background */
 .container { 
-  background: #ffd6e0;
+  background: #FFF8E8; /* cream background (inverted from homepage) */
   min-height: 100vh;
   width: 100vw; 
   display: flex;
@@ -9,17 +9,17 @@
   justify-content: flex-start; 
   padding: 2rem;
   box-sizing: border-box;
-  font-family: 'Quicksand', sans-serif;
+  font-family: 'Helvetica Neue', sans-serif;
+  color: #064232; /* deep green text */
 }
 
 /* Main header */
 .header {
   text-align: center;
-  font-size: 2.5rem;
+  font-size: 3rem;
   margin-bottom: 2rem;
-  color: #9d174d;
+  color: #BB6653; /* warm terracotta accent */
   font-weight: bold;
-  font-family: 'Baloo 2', cursive;
 }
 
 /* Add Todo section */
@@ -31,20 +31,22 @@
   justify-content: center;
 }
 
-/* boxes */
+/* Input & Select boxes */
 .input, .select {
   padding: 0.5rem 0.75rem;
-  border-radius: 5px;
-  border: 1px solid #f3a3b3;
-  outline: none;
-  box-shadow: rgba(0,0,0,0.05);
+  border-radius: 12px;
+  border: 1px solid #BB6653;
+  background: #DEE8CE; /* soft green pastel */
+  color: #064232;
   font-size: 1rem;
+  outline: none;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
 }
 
 .input:focus, .select:focus {
-  border-color: #f472b6;
-  box-shadow: rgba(244,114,182,0.3);
-  background-color: #fff0f4;
+  border-color: #F08B51; /* brighter terracotta */
+  box-shadow: 0 0 5px rgba(240,139,81,0.3);
+  background-color: #fff;
 }
 
 /* Buttons */
@@ -52,15 +54,15 @@
   padding: 0.5rem 1rem;
   cursor: pointer;
   border: none;
-  border-radius: 5px;
-  background-color: #f9a8d4;
-  color: #fff;
+  border-radius: 12px;
+  background-color: #BB6653; /* terracotta */
+  color: #FFF8E8; /* cream text */
   font-weight: bold;
   transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
 .button:hover {
-  background-color: #f472b6;
+  background-color: #F08B51;
   transform: translateY(-1px);
 }
 
@@ -70,24 +72,31 @@
   padding: 0;
   margin-bottom: 2rem;
   width: 100%;
-  max-width: 400px;
+  max-width: 500px;
+  
 }
 
 .todoItem {
-  display: flex;
+    display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.5rem;
   padding: 0.5rem 0.75rem;
-  border-radius: 8px;
+  border-radius: 16px;
   background-color: #fff;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
 
+.todoText {
+  flex-grow: 1;      /* take up all remaining space */
+  text-align: left;  /* force text left inside its box */
+}
+
+
 .todoItem:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  box-shadow: 0 6px 12px rgba(6,66,50,0.15);
 }
 
 /* Completed todos */
@@ -99,7 +108,6 @@
 /* Section headers */
 h2 {
   text-align: center;
-  
-  color: #9d174d;
+  color: #BB6653; /* terracotta accent */
   font-size: 1.5rem;
 }

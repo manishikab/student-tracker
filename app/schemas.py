@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from datetime import date
+from datetime import date, datetime
 from typing import Optional
 
 # Todo schemas
@@ -67,6 +67,21 @@ class ExerciseEntryCreate(ExerciseEntryBase):
 
 class ExerciseEntry(ExerciseEntryBase):
     id: int
+
+    class Config:
+        orm_mode = True
+
+# Homepage Schemas
+class GoalBase(BaseModel):
+    text: str
+    done: bool = False
+
+class GoalCreate(GoalBase):
+    pass
+
+class Goal(GoalBase):
+    id: int
+    created_at: datetime
 
     class Config:
         orm_mode = True

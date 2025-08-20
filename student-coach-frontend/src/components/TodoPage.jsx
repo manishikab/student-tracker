@@ -2,6 +2,7 @@ import styles from "../TodoPage.module.css";
 import { useState, useEffect, useContext } from "react";
 import { getTodos, createTodo, updateTodo, deleteTodo } from "../api/todoApi.js";
 import { DashboardContext } from "../DashboardContext";
+import AiAssistant from "../components/AiAssistant.jsx"; 
 
 export default function TodoPage() {
   const { todoTasks, setTodoTasks } = useContext(DashboardContext);
@@ -88,9 +89,11 @@ export default function TodoPage() {
               checked={todo.completed}
               onChange={() => handleToggleComplete(todo)}
             />
-            <span className={todo.completed ? styles.completed : ""}>
-              {todo.title}
-            </span>
+<span
+  className={`${styles.todoText} ${todo.completed ? styles.completed : ""}`}
+>
+  {todo.title}
+</span>
             <button onClick={() => handleDelete(todo.id)} className={styles.button}>
               Delete
             </button>
@@ -107,7 +110,9 @@ export default function TodoPage() {
               checked={todo.completed}
               onChange={() => handleToggleComplete(todo)}
             />
-            <span className={todo.completed ? styles.completed : ""}>
+            <span
+              className={`${styles.todoText} ${todo.completed ? styles.completed : ""}`}
+            >
               {todo.title}
             </span>
             <button onClick={() => handleDelete(todo.id)} className={styles.button}>
@@ -116,6 +121,8 @@ export default function TodoPage() {
           </li>
         ))}
       </ul>
+      {/* AI Assistant */}
+    <AiAssistant currentPage="todos" todos={todos} />
     </div>
   );
 }

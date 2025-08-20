@@ -28,6 +28,7 @@ export default function ChatBox() {
   return (
     <div className="chat-container">
       <div className="messages">
+        <h3>Chat with an AI Wellness Coach!</h3>
         {messages.map((msg, i) => (
           <div
             key={i}
@@ -42,6 +43,12 @@ export default function ChatBox() {
           value={input}
           onChange={e => setInput(e.target.value)}
           placeholder="Type a message..."
+          onKeyDown={(e) => {
+        if (e.key === "Enter" && input.trim()) {
+           sendMessage();
+          e.preventDefault(); // prevents form submission or extra newlines
+        }
+      }}
         />
         <button onClick={sendMessage}>Send</button>
       </div>

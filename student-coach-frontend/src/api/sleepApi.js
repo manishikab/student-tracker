@@ -10,13 +10,19 @@ export async function getSleepAverage() {
   return res.json();
 }
 
-export async function postSleepEntry(sleep) {
+export async function postSleepEntry(entry) {
   const res = await fetch(`${BASE_URL}/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(sleep),
+    body: JSON.stringify(entry),
   });
-  return res.json();
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Server error: ${res.status} - ${err}`);
+  }
+
+  return res.json(); // should include id, date, hours
 }
 
 export async function deleteSleepEntry(id) {

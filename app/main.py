@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routes import todo_routes, sleep_routes, wellness_routes, exercise_routes
+from app.routes import todo_routes, sleep_routes, wellness_routes, exercise_routes, goals
 
 app = FastAPI()
 
@@ -18,3 +18,4 @@ app.include_router(todo_routes.router)
 app.include_router(sleep_routes.router)
 app.include_router(wellness_routes.router)
 app.include_router(exercise_routes.router)
+app.include_router(goals.router)

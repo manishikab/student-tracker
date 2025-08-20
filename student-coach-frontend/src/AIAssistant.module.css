@@ -1,0 +1,46 @@
+.assistantWrapper {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  z-index: 1000;
+}
+
+.chatBox {
+  background: #fff8e8; /* cream */
+  color: #064232; /* deep green */
+  border: 2px solid #bb6653;
+  border-radius: 16px;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+  max-width: 260px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  font-family: 'Helvetica Neue', sans-serif;
+}
+
+.chatBox h4 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+  color: #bb6653;
+}
+
+.fab {
+  background-color: #bb6653;
+  color: #fff8e8;
+  border: none;
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.fab:hover {
+  background-color: #f08b51;
+  transform: scale(1.05);
+}

@@ -12,6 +12,7 @@ import {
 } from "recharts";
 
 import { DashboardContext } from "../DashboardContext";
+import AiAssistant from "../components/AiAssistant.jsx"; 
 
 
 export default function WellnessPage() {
@@ -176,6 +177,8 @@ export default function WellnessPage() {
           </li>
         ))}
       </ul>
+      {/* AI Assistant */}
+      <AiAssistant currentPage="wellness" />
     </div>
   );
 }

@@ -44,7 +44,7 @@ function saveMessage(userId, role, content) {
 }
 
 app.post("/chat", async (req, res) => {
-  const { message, userId = "default_user" } = req.body; // later you can pass real user IDs from frontend
+  const { message, userId = "default_user", context = {}, page } = req.body;
 
   try {
     // Save user message
@@ -53,6 +53,16 @@ app.post("/chat", async (req, res) => {
     // Get last 10 messages for context
     const history = getChatHistory(userId);
 
+    // Format context summary for the AI
+    const contextSummary = `
+User dashboard snapshot:
+- Current page: ${page}
+- Todos: ${context.todoTasks?.length || 0} tasks (${context.todoTasks?.slice(0,3).map(t => t.title).join(", ") || "none"})
+- Sleep entries: ${context.sleepEntries?.length || 0} (latest: ${context.sleepEntries?.[0]?.hours || "N/A"} hrs)
+- Exercise entries: ${context.exerciseEntries?.length || 0} (latest: ${context.exerciseEntries?.[0]?.minutes || "N/A"} mins)
+- Wellness entries: ${context.wellnessEntries?.length || 0} (latest: ${context.wellnessEntries?.[0]?.note || "N/A"})
+    `;
+
     // Call OpenAI
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -60,15 +70,21 @@ app.post("/chat", async (req, res) => {
         {
           role: "system",
           content: `
-You are a friendly wellness coach for a college student.
-- Always respond in 1-3 casual sentences.
-- Never use numbered lists or long paragraphs.
-- Be supportive, like a close friend.
+You are a supportive college wellness assistant. 
+Rules:
+- Be short (1–5 casual sentences max).
+- Sound friendly, like a peer/friend, not a formal coach.
+- Always ground advice in the context provided below.
+- If the context is empty, encourage the user to log something.
+
+Here’s the latest context:
+${contextSummary}
           `,
         },
         ...history,
+        { role: "user", content: message },
       ],
-      temperature: 0.8,
+      temperature: 0.7,
     });
 
     const aiReply = response.choices[0].message.content;

@@ -1,0 +1,59 @@
+.calendar-container {
+  max-width: 800px;  /* make it bigger */
+  margin: 2rem auto;
+  background: #DEE8CE; /* light green background */
+  padding: 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.react-calendar {
+  border: none;
+  width: 100%;
+  font-family: "Inter", sans-serif;
+  background: transparent;
+}
+
+/* Days */
+.react-calendar__tile {
+  padding: 1rem 0.5rem;
+  border-radius: 8px;
+  color: #064232; /* deep green text */
+}
+
+/* Today */
+.react-calendar__tile--now {
+  background: #F08B51 !important; /* orange */
+  color: white !important;
+}
+
+/* Active (selected) */
+.react-calendar__tile--active {
+  background: #BB6653 !important; /* brownish red */
+  color: white !important;
+}
+
+/* Remove weird weekend red */
+.react-calendar__month-view__days__day--weekend {
+  color: #064232; /* same as weekdays */
+}
+
+
+
+/* Base dot */
+.react-calendar .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+/* Specific colors */
+.react-calendar .dot.sleep {
+  background-color: #064232; /* dark green */
+}
+.react-calendar .dot.exercise {
+  background-color: #F08B51; /* orange */
+}
+.react-calendar .dot.wellness {
+  background-color: #BB6653; /* earthy red */
+}
