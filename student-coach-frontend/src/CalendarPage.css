@@ -1,12 +1,30 @@
-.calendar-container {
-  max-width: 800px;  /* make it bigger */
-  margin: 2rem auto;
+/* Page container (same style pattern as other pages) */
+.calendar-page {
   background: #DEE8CE; /* light green background */
+  min-height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column; /* navbar at top, content below */
+  align-items: center;
+  justify-content: flex-start;
+  padding: 2rem;
+  box-sizing: border-box;
+  font-family: "Inter", sans-serif;
+  color: #064232; /* deep green text */
+}
+
+/* Calendar container (the card in the middle) */
+.calendar-container {
+  width: 100%;
+  max-width: 800px;
+  background: #fff; /* white card for contrast */
   padding: 1.5rem;
   border-radius: 16px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  margin-top: 2rem; /* push it below navbar */
 }
 
+/* Calendar itself */
 .react-calendar {
   border: none;
   width: 100%;
@@ -18,42 +36,41 @@
 .react-calendar__tile {
   padding: 1rem 0.5rem;
   border-radius: 8px;
-  color: #064232; /* deep green text */
+  color: #064232;
 }
 
 /* Today */
 .react-calendar__tile--now {
-  background: #F08B51 !important; /* orange */
+  background: #F08B51 !important;
   color: white !important;
 }
 
-/* Active (selected) */
+/* Active (selected day) */
 .react-calendar__tile--active {
-  background: #BB6653 !important; /* brownish red */
+  background: #BB6653 !important;
   color: white !important;
 }
 
-/* Remove weird weekend red */
+/* Remove weekend red */
 .react-calendar__month-view__days__day--weekend {
-  color: #064232; /* same as weekdays */
+  color: #064232;
 }
 
+/* Dots under days */
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: 3px;
+  margin-top: 2px;
+}
 
-
-/* Base dot */
-.react-calendar .dot {
+.dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
+  display: inline-block;
 }
 
-/* Specific colors */
-.react-calendar .dot.sleep {
-  background-color: #064232; /* dark green */
-}
-.react-calendar .dot.exercise {
-  background-color: #F08B51; /* orange */
-}
-.react-calendar .dot.wellness {
-  background-color: #BB6653; /* earthy red */
-}
+.dot.sleep { background-color: #4a90e2; }
+.dot.exercise { background-color: #50e3c2; }
+.dot.wellness { background-color: #f5a623; }

@@ -11,11 +11,13 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { DashboardContext } from "../DashboardContext";
-import AiAssistant from "../components/AiAssistant.jsx";
+import AiAssistant from "../components/AiAssistant.jsx"; 
+
 
 export default function ExercisePage() {
-  const { exerciseEntries, setExerciseEntries, setExerciseMinutes } = useContext(DashboardContext);
+  const { exerciseMinutes, setExerciseMinutes } = useContext(DashboardContext);
 
+  const [entries, setEntries] = useState([]);
   const [date, setDate] = useState("");
   const [title, setTitle] = useState("");
   const [duration, setDuration] = useState("");
@@ -24,69 +26,60 @@ export default function ExercisePage() {
   const [trend, setTrend] = useState(null);
   const [weeklyTotal, setWeeklyTotal] = useState(0);
   const [error, setError] = useState("");
-  const [chartData, setChartData] = useState([]);
+  const [chartData, setChartData] = useState([]); 
 
   useEffect(() => {
     fetchExerciseEntries();
   }, []);
 
   async function fetchExerciseEntries() {
-    const data = await getExerciseEntries();
-    const normalized = data
-      .map((e) => ({ ...e, duration: Number(e.duration) || 0 }))
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
+  const data = await getExerciseEntries();
+  const normalized = data.map((e) => ({
+    ...e,
+    duration: Number(e.duration) || 0,
+  })).sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    setExerciseEntries(normalized);             // update context
-    setChartData(aggregateByDate(normalized)); // chart data
-    calculateTrend(normalized);
-  }
+  setEntries(normalized);             // raw list
+  setChartData(aggregateByDate(normalized)); // aggregated for chart
+  calculateTrend(normalized);
+}
 
-  function aggregateByDate(entries) {
-    const grouped = entries.reduce((acc, entry) => {
-      if (!acc[entry.date]) acc[entry.date] = 0;
-      acc[entry.date] += entry.duration;
-      return acc;
-    }, {});
+function aggregateByDate(entries) {
+  const grouped = entries.reduce((acc, entry) => {
+    if (!acc[entry.date]) acc[entry.date] = 0;
+    acc[entry.date] += entry.duration;
+    return acc;
+  }, {});
 
-    return Object.entries(grouped)
-      .map(([date, duration]) => ({ date, duration }))
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
-  }
+  return Object.entries(grouped)
+    .map(([date, duration]) => ({ date, duration }))
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+}
 
   async function handleAddEntry() {
-    if (!date || !title || !duration) {
-      setError("Date, Title, and Duration are required.");
-      return;
-    }
-    if (duration <= 0 || duration > 360) {
-      setError("Duration must be between 1 and 360 minutes.");
-      return;
-    }
-
-    const created = await postExerciseEntry({
-      date,
-      title,
-      duration,
-      intensity: intensity || null,
-      notes: notes || null,
-    });
-
-    const updated = [...exerciseEntries, { ...created, duration: Number(created.duration) || 0 }]
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
-
-    setExerciseEntries(updated);              // update context
-    setChartData(aggregateByDate(updated));
-    calculateTrend(updated);
-
-    // Reset form
-    setDate(""); setTitle(""); setDuration(""); setIntensity(""); setNotes(""); setError("");
+  if (!date || !title || !duration) {
+    setError("Date, Title, and Duration are required.");
+    return;
   }
+  if (duration <= 0 || duration > 360) {
+    setError("Duration must be between 1 and 360 minutes.");
+    return;
+  }
+
+  const created = await postExerciseEntry({ date, title, duration, intensity: intensity || null, notes: notes || null });
+  const updated = [...entries, { ...created, duration: Number(created.duration) || 0 }]
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  setEntries(updated);              // raw list
+  setChartData(aggregateByDate(updated)); // aggregated for chart
+  setDate(""); setTitle(""); setDuration(""); setIntensity(""); setNotes(""); setError("");
+  calculateTrend(updated);
+}
 
   async function handleDeleteEntry(id) {
     await deleteExerciseEntry(id);
-    const updated = exerciseEntries.filter((e) => e.id !== id);
-    setExerciseEntries(updated); // update context
-    setChartData(aggregateByDate(updated));
+    const updated = entries.filter((e) => e.id !== id);
+    setEntries(updated);
     calculateTrend(updated);
   }
 
@@ -94,25 +87,33 @@ export default function ExercisePage() {
     if (!entries.length) {
       setTrend(null);
       setWeeklyTotal(0);
-      setExerciseMinutes(0);
+      setExerciseMinutes(0); // Update dashboard
       return;
     }
 
     const now = new Date();
-    const oneWeekAgo = new Date(); oneWeekAgo.setDate(now.getDate() - 7);
-    const twoWeeksAgo = new Date(); twoWeeksAgo.setDate(now.getDate() - 14);
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(now.getDate() - 7);
+
+    const twoWeeksAgo = new Date();
+    twoWeeksAgo.setDate(now.getDate() - 14);
 
     const thisWeek = entries.filter((e) => new Date(e.date) >= oneWeekAgo);
-    const lastWeek = entries.filter((e) => new Date(e.date) >= twoWeeksAgo && new Date(e.date) < oneWeekAgo);
+    const lastWeek = entries.filter(
+      (e) => new Date(e.date) >= twoWeeksAgo && new Date(e.date) < oneWeekAgo
+    );
 
     const totalThisWeek = thisWeek.reduce((sum, e) => sum + e.duration, 0);
     setWeeklyTotal(totalThisWeek);
-    setExerciseMinutes(totalThisWeek); // update dashboard
+    setExerciseMinutes(totalThisWeek); // Update dashboard context
 
-    const totalLastWeek = lastWeek.reduce((sum, e) => sum + e.duration, 0);
-    if (totalThisWeek > totalLastWeek) setTrend("You're exercising more this week! 💪");
-    else if (totalThisWeek < totalLastWeek) setTrend("You exercised less than last week 😅");
-    else setTrend("Your exercise is about the same as last week.");
+    if (totalThisWeek > lastWeek.reduce((sum, e) => sum + e.duration, 0)) {
+      setTrend("You're exercising more this week! 💪");
+    } else if (totalThisWeek < lastWeek.reduce((sum, e) => sum + e.duration, 0)) {
+      setTrend("You exercised less than last week 😅");
+    } else {
+      setTrend("Your exercise is about the same as last week.");
+    }
   }
 
   return (
@@ -145,18 +146,18 @@ export default function ExercisePage() {
       <div style={{ width: "100%", maxWidth: "600px", height: "300px", marginBottom: "2rem" }}>
         <ResponsiveContainer>
           <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
-            <YAxis domain={[0, 'dataMax + 10']} />
-            <Tooltip />
-            <Line type="monotone" dataKey="duration" stroke="#60a5fa" strokeWidth={2} dot />
-          </LineChart>
+  <CartesianGrid strokeDasharray="3 3" />
+  <XAxis dataKey="date" />
+  <YAxis domain={[0, 'dataMax + 10']} />
+  <Tooltip />
+  <Line type="monotone" dataKey="duration" stroke="#60a5fa" strokeWidth={2} dot />
+</LineChart>
         </ResponsiveContainer>
       </div>
 
       {/* Exercise Entries List */}
       <ul className={styles.entryList}>
-        {exerciseEntries.map((e) => (
+        {entries.map((e) => (
           <li key={e.id} className={styles.entryItem}>
             <div>
               <strong>{e.date}</strong> — {e.title} | {e.duration} min {e.intensity && `| Intensity: ${e.intensity}`}
@@ -166,9 +167,8 @@ export default function ExercisePage() {
           </li>
         ))}
       </ul>
-
-      {/* AI Assistant */}
-      <AiAssistant currentPage="exercise" />
-    </div>
+    {/* AI Assistant */}
+          <AiAssistant currentPage="sleep" />
+        </div>
   );
 }

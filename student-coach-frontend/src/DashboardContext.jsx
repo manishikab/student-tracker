@@ -1,91 +1,88 @@
 import React, { createContext, useState, useEffect } from "react";
-import { getSleepEntries, getSleepAverage } from "./api/sleepApi";
-import { getWellnessEntries } from "./api/wellnessApi";
+import { getTodos } from "./api/todoApi";
 import { getExerciseEntries } from "./api/exerciseApi";
+import { getSleepEntries } from "./api/sleepApi";
+import { getWellnessEntries } from "./api/wellnessAPI";
+
+// helper: normalize JS Date → YYYY-MM-DD in local time
+const toLocalDate = (d) => {
+  const dt = new Date(d);
+  dt.setMinutes(dt.getMinutes() - dt.getTimezoneOffset());
+  return dt.toISOString().split("T")[0];
+};
 
 export const DashboardContext = createContext();
 
-export const DashboardProvider = ({ children }) => {
-  // Todos (localStorage)
-  const [todoTasks, setTodoTasks] = useState(() => {
-    const saved = localStorage.getItem("todoTasks");
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  // Exercise (backend + localStorage fallback)
-  const [exerciseEntries, setExerciseEntries] = useState(() => {
-    const saved = localStorage.getItem("exerciseEntries");
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  // Sleep → backend is source of truth
+export function DashboardProvider({ children }) {
+  // raw data
+  const [todoTasks, setTodoTasks] = useState([]);
+  const [exerciseEntries, setExerciseEntries] = useState([]);
   const [sleepEntries, setSleepEntries] = useState([]);
-  const [sleepHours, setSleepHours] = useState(0);
+  const [wellnessEntries, setWellnessEntries] = useState([]);
 
-  // Wellness
-  const [wellnessEntries, setWellnessEntries] = useState(() => {
-    const saved = localStorage.getItem("wellnessEntries");
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  // Fetch sleep entries + average on mount
+  // fetch on mount
   useEffect(() => {
-    async function fetchSleep() {
-      try {
-        const entries = await getSleepEntries();
-        setSleepEntries(entries);
+  async function fetchAll() {
+    try {
+      const todos = await getTodos();
+      setTodoTasks(todos);
 
-        const avg = await getSleepAverage();
-        setSleepHours(avg?.average_hours || 0);
-      } catch (err) {
-        console.error("Failed to fetch sleep data:", err);
-      }
+      // leave API entries as-is (assume backend gives YYYY-MM-DD)
+      const exercise = await getExerciseEntries();
+      setExerciseEntries(exercise);
+
+      const sleep = await getSleepEntries();
+      setSleepEntries(sleep);
+
+      const wellness = await getWellnessEntries();
+      setWellnessEntries(wellness);
+    } catch (err) {
+      console.error("Failed to fetch dashboard data:", err);
     }
-    fetchSleep();
-  }, []);
+  }
+  fetchAll();
+}, []);
 
-  // Fetch wellness & exercise entries from backend on mount
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const wellness = await getWellnessEntries();
-        setWellnessEntries(wellness);
+  // derived snapshots
+  const today = toLocalDate(new Date());
+const yesterday = (() => {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return toLocalDate(d);
+})();
 
-        const exercise = await getExerciseEntries();
-        setExerciseEntries(exercise);
-      } catch (err) {
-        console.error("Failed to fetch wellness/exercise:", err);
-      }
-    }
-    fetchData();
-  }, []);
+  // exercise minutes today
+  const todayExerciseMinutes = exerciseEntries
+    .filter((e) => e.date === today)
+    .reduce((sum, e) => sum + (e.duration || 0), 0);
 
-  // Persist localStorage for non-sleep data
-  useEffect(() => localStorage.setItem("todoTasks", JSON.stringify(todoTasks)), [todoTasks]);
-  useEffect(() => localStorage.setItem("exerciseEntries", JSON.stringify(exerciseEntries)), [exerciseEntries]);
-  useEffect(() => localStorage.setItem("wellnessEntries", JSON.stringify(wellnessEntries)), [wellnessEntries]);
+  // sleep hours last night
+  const lastNightSleep = sleepEntries.find((s) => s.date === yesterday) || null;
+  const lastNightSleepHours = lastNightSleep ? lastNightSleep.hours : 0;
 
-  // Helper: today snapshots
-  const today = new Date().toISOString().split("T")[0];
-  const todayExercise = exerciseEntries.find(e => e.date === today) || null;
-  const todaySleep = sleepEntries.find(s => s.date === today) || null;
-  const todayWellness = wellnessEntries.find(w => w.date === today) || null;
+  // wellness entry today
+  const todayWellness = wellnessEntries.find((w) => w.date === today) || null;
 
   return (
     <DashboardContext.Provider
       value={{
-        todoTasks, setTodoTasks,
-        exerciseEntries, setExerciseEntries,
-        sleepEntries, setSleepEntries,
-        wellnessEntries, setWellnessEntries,
-        todayExercise,
-        todaySleep,
+        // raw
+        todoTasks,
+        setTodoTasks,
+        exerciseEntries,
+        setExerciseEntries,
+        sleepEntries,
+        setSleepEntries,
+        wellnessEntries,
+        setWellnessEntries,
+
+        // derived
+        todayExerciseMinutes,
+        lastNightSleepHours,
         todayWellness,
-        sleepHours,
-        setSleepHours,
       }}
     >
       {children}
     </DashboardContext.Provider>
   );
-};
+}

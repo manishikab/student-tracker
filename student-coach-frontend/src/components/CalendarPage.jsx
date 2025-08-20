@@ -39,13 +39,14 @@ function tileContent({ date, view }) {
 }
 
 // Daily logs
-const dailyLogs = {
+const dailyLogs = selectedDate ? {
   sleep: sleepEntries.filter(e => formatDate(e.date) === selectedDate),
   exercise: exerciseEntries.filter(e => formatDate(e.date) === selectedDate),
   wellness: wellnessEntries.filter(e => formatDate(e.date) === selectedDate)
-};
+} : { sleep: [], exercise: [], wellness: [] };
 
 return (
+      <div className="calendar-page">
   <div className="calendar-container">
     <h2>Activity Calendar</h2>
     <Calendar
@@ -54,16 +55,19 @@ return (
     />
 
     {selectedDate && (
-      <div className="day-summary">
-        <h3>Entries for {selectedDate}</h3>
-        {dailyLogs.sleep.map((s, i) => <p key={i}>💤 Slept {s.hours} hrs</p>)}
-        {dailyLogs.exercise.map((x, i) => <p key={i}>💪 {x.minutes} mins exercise</p>)}
-        {dailyLogs.wellness.map((w, i) => <p key={i}>🌱 {w.note || "Wellness check-in"}</p>)}
-        {dailyLogs.sleep.length + dailyLogs.exercise.length + dailyLogs.wellness.length === 0 && (
-          <p>No logs for this day.</p>
-        )}
-      </div>
+  <div className="day-summary">
+    <h3>Entries for {selectedDate}</h3>
+    {dailyLogs.sleep.map((s, i) => <p key={i}>💤 Slept {s.hours} hrs</p>)}
+    {dailyLogs.exercise.map((x, i) => <p key={i}>💪 {x.duration} mins exercise</p>)}
+    {dailyLogs.wellness.map((w, i) => (
+      <p key={i}>🌱 Mood {w.mood}/10, Energy {w.energy}/10</p>
+    ))}
+    {dailyLogs.sleep.length + dailyLogs.exercise.length + dailyLogs.wellness.length === 0 && (
+      <p>No logs for this day.</p>
     )}
   </div>
+)}
+  </div>
+   </div>
 );
 }
