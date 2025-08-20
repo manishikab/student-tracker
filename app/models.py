@@ -29,12 +29,12 @@ class WellnessEntry(Base):
 
 # Excercise Model
 class ExerciseEntry(Base):
-    __tablename__ = "exercise_entries"  # fix typo too
+    __tablename__ = "exercise_entries"  
     id = Column(Integer, primary_key=True, index=True)
     date = Column(Date, index=True)
     title = Column(String, index=True)
-    duration = Column(Integer, nullable=False)  # add this
-    intensity = Column(String, nullable=True)   # add this
+    duration = Column(Integer, nullable=False) 
+    intensity = Column(String, nullable=True)  
     notes = Column(String, nullable=True)
 
 # Homepage

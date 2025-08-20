@@ -8,12 +8,12 @@ export default function HomePage() {
   const [goals, setGoals] = useState([]);
   const [goalInput, setGoalInput] = useState("");
 
-  // Pull dashboard snapshots from context (no extra fetching here)
+  // pull from dash
   const {
     incompleteTodoTasks,
-    todayExerciseMinutes,     // number (total minutes today)
-    lastNightSleepHours,      // number (hours last night)
-    todayWellness,            // object or null ({mood, energy, ...})
+    todayExerciseMinutes,     
+    lastNightSleepHours,     
+    todayWellness,           
   } = useContext(DashboardContext);
 
   // Load goals from API
@@ -82,12 +82,12 @@ export default function HomePage() {
         >
           {/* To-Do */}
           <div className="card">
-  ★ <strong>To-Do:</strong>
-  <br />
-  {incompleteTodoTasks.length > 0
-    ? `${incompleteTodoTasks.length} tasks left`
-    : "None!"}
-</div>
+            ★ <strong>To-Do:</strong>
+            <br />
+            {incompleteTodoTasks.length > 0
+              ? `${incompleteTodoTasks.length} tasks left`
+              : "None!"}
+          </div>
 
           {/* Exercise */}
           <div className="card">
@@ -108,14 +108,12 @@ export default function HomePage() {
           </div>
 
           {/* Wellness */}
-          {/* Wellness */}
-<div className="card">
-  ★ <strong>Wellness:</strong><br />
-  {todayWellness
-    ? `Mood: ${todayWellness.mood}/10, Energy: ${todayWellness.energy}/10`
-    : "Log your daily wellness check-in!"}
-</div>
-
+            <div className="card">
+              ★ <strong>Wellness:</strong><br />
+              {todayWellness
+                ? `Mood: ${todayWellness.mood}/10, Energy: ${todayWellness.energy}/10`
+                : "Log your daily wellness check-in!"}
+            </div>
         </div>
 
         {/* Goal Box */}

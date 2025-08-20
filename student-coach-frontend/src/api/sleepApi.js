@@ -23,9 +23,9 @@ export async function postSleepEntry(entry) {
   }
 
   try {
-    return await res.json(); // should be valid JSON
+    return await res.json(); 
   } catch {
-    return { success: true }; // fallback if parsing fails
+    return { success: true };
   }
 }
 

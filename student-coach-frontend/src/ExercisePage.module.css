@@ -1,6 +1,5 @@
-/* Container & background */
 .container { 
-  background: #FFF8E8; /* cream background (inverted from homepage) */
+  background: #FFF8E8;
   min-height: 100vh;
   width: 100vw; 
   display: flex;
@@ -10,19 +9,18 @@
   padding: 2rem;
   box-sizing: border-box;
   font-family: 'Helvetica Neue', sans-serif;
-  color: #064232; /* deep green text */
+  color: #064232;
 }
 
-/* Main header */
+
 .header {
 text-align: center;
   font-size: 3rem;
   margin-bottom: 2rem;
-  color: #BB6653; /* warm terracotta accent */
+  color: #BB6653;
   font-weight: bold;
 }
 
-/* Add Entry section */
 .addEntry {
   display: flex;
   flex-direction: column;
@@ -32,12 +30,11 @@ text-align: center;
   max-width: 400px;
 }
 
-/* Inputs */
 .input {
   padding: 0.5rem 0.75rem;
   border-radius: 12px;
   border: 1px solid #BB6653;
-  background: #DEE8CE; /* soft green pastel */
+  background: #DEE8CE; 
   color: #064232;
   font-size: 1rem;
   outline: none;
@@ -45,19 +42,18 @@ text-align: center;
 }
 
 .input:focus {
-  border-color: #F08B51; /* brighter terracotta */
+  border-color: #F08B51; 
   box-shadow: 0 0 5px rgba(240,139,81,0.3);
   background-color: #fff;
 }
 
-/* Buttons */
 .centerButton {
   display: flex;
   justify-content: center;
 }
 
 .centerButton button {
-  width: 200px; /* or whatever width you like */
+  width: 200px; 
 }
 
 .button {
@@ -65,8 +61,8 @@ text-align: center;
   cursor: pointer;
   border: none;
   border-radius: 12px;
-  background-color: #BB6653; /* terracotta */
-  color: #FFF8E8; /* cream text */
+  background-color: #BB6653; 
+  color: #FFF8E8; 
   font-weight: bold;
   transition: background-color 0.2s ease, transform 0.1s ease;
 }

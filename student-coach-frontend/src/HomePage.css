@@ -2,7 +2,7 @@
 .container{
   
   height: 100%;
-  background: #DEE8CE; /* soft green pastel background */
+  background: #DEE8CE;
   min-height: 100vh;
   width: 100vw; 
   display: flex;
@@ -20,7 +20,7 @@
   text-align: center;
   max-width: 800px;
   margin: 0 auto;
-  color: #064232; /* deep text for readability */
+  color: #064232; 
 }
 
 h1{

@@ -14,7 +14,6 @@ const toLocalDate = (d) => {
 export const DashboardContext = createContext();
 
 export function DashboardProvider({ children }) {
-  // raw data
   const [todoTasks, setTodoTasks] = useState([]);
   const [exerciseEntries, setExerciseEntries] = useState([]);
   const [sleepEntries, setSleepEntries] = useState([]);
@@ -27,7 +26,6 @@ export function DashboardProvider({ children }) {
       const todos = await getTodos();
       setTodoTasks(todos);
 
-      // leave API entries as-is (assume backend gives YYYY-MM-DD)
       const exercise = await getExerciseEntries();
       setExerciseEntries(exercise);
 
@@ -45,11 +43,11 @@ export function DashboardProvider({ children }) {
 
   // derived snapshots
   const today = toLocalDate(new Date());
-const yesterday = (() => {
-  const d = new Date();
-  d.setDate(d.getDate() - 1);
-  return toLocalDate(d);
-})();
+  const yesterday = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return toLocalDate(d);
+  })();
 
   // exercise minutes today
   const todayExerciseMinutes = exerciseEntries

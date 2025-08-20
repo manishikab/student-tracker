@@ -21,7 +21,7 @@ h3{
 
 .message.user {
   border: 1px solid #EDBFA4;
-  background: #F7E1C8; /* warm peach */
+  background: #F7E1C8; 
   color: #5A2C2C;
   padding: 12px 16px;
   border-radius: 16px;
@@ -35,7 +35,7 @@ h3{
 
 .message.ai {
   border: 1px solid #BBE3B0;
-  background: #D6EFD8; /* soft mint */
+  background: #D6EFD8; 
   color: #064232; 
   padding: 12px 16px;
   border-radius: 16px;

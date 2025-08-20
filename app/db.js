@@ -2,7 +2,7 @@
 
 import Database from "better-sqlite3";
 
-const db = new Database("chat.db"); // this will create chat.db in your project folder
+const db = new Database("chat.db"); 
 
 // Create table if not exists
 db.exec(`
