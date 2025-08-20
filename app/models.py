@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Boolean, Float, Date, DateTime, func
-from .database import Base
+from app.database import Base
 
 # Todo model
 class TodoItem(Base):
