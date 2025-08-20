@@ -68,8 +68,7 @@ export default function HomePage() {
     <div className="container">
       <div className="homepage">
         <h1>
-          Welcome to Your <br />
-          Student Life Dashboard!
+          Student Life, Simplified.
         </h1>
         <h2>Your AI-powered hub for school, health, and balance.</h2>
 

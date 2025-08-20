@@ -1,27 +1,45 @@
-/* Page container (same style pattern as other pages) */
+/* Page container */
 .calendar-page {
-  background: #DEE8CE; /* light green background */
+  background: #DEE8CE;
   min-height: 100vh;
   width: 100vw;
   display: flex;
-  flex-direction: column; /* navbar at top, content below */
+  flex-direction: column;
   align-items: center;
   justify-content: flex-start;
   padding: 2rem;
   box-sizing: border-box;
   font-family: "Inter", sans-serif;
-  color: #064232; /* deep green text */
+  color: #064232;
 }
 
-/* Calendar container (the card in the middle) */
+.calendar-page header {
+  font-size: 3rem;
+  font-weight: bold;
+  color: #064232;
+  text-align: center;
+}
+
+/* Calendar container card */
 .calendar-container {
+  display: flex;
   width: 100%;
-  max-width: 800px;
-  background: #fff; /* white card for contrast */
+  max-width: 1200px;
+  background: #fff;
   padding: 1.5rem;
   border-radius: 16px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  margin-top: 2rem; /* push it below navbar */
+  margin-top: 2rem;
+  gap: 2rem;
+  box-sizing: border-box;
+  align-items: stretch;  /* THIS ensures children stretch to full height */
+}
+
+/* Left side: calendar takes full height */
+.calendar-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Calendar itself */
@@ -32,26 +50,28 @@
   background: transparent;
 }
 
-/* Days */
 .react-calendar__tile {
   padding: 1rem 0.5rem;
   border-radius: 8px;
   color: #064232;
 }
 
-/* Today */
-.react-calendar__tile--now {
-  background: #F08B51 !important;
-  color: white !important;
+.react-calendar__navigation button {
+  color: #BB6653;
+  font-weight: bold;
+  font-size: 1.5rem;
 }
 
-/* Active (selected day) */
-.react-calendar__tile--active {
+.react-calendar__tile--now {
   background: #BB6653 !important;
   color: white !important;
 }
 
-/* Remove weekend red */
+.react-calendar__tile--active {
+  background: #F08B51 !important;
+  color: white !important;
+}
+
 .react-calendar__month-view__days__day--weekend {
   color: #064232;
 }
@@ -72,5 +92,57 @@
 }
 
 .dot.sleep { background-color: #4a90e2; }
-.dot.exercise { background-color: #50e3c2; }
-.dot.wellness { background-color: #f5a623; }
+.dot.exercise { background-color: #f5a623; }
+.dot.wellness { background-color: #50e3c2; }
+
+.calendar-right {
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: #FFF8E8;
+  padding: 1rem;
+  border-radius: 12px;
+  box-sizing: border-box;
+}
+.calendar-legend-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+
+/* Individual legend items */
+.legend-item {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  line-height: 1;
+  width: 100%;
+}
+
+.jump-today-wrapper {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;    /* center button horizontally */
+}
+
+.jump-today-wrapper .button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  line-height: 1;
+  width: 100%;
+}
+
+.day-summary {
+  background-color: #FFF8E8; /* subtle card color */
+  border-radius: 12px;
+  padding: 1rem;
+  margin-top: 1rem;
+  width: 100%;        /* fill container width */
+  box-sizing: border-box;
+}

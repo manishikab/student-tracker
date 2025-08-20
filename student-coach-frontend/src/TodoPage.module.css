@@ -1,6 +1,6 @@
 /* Container & background */
 .container { 
-  background: #FFF8E8; /* cream background (inverted from homepage) */
+  background: #FFF8E8;
   min-height: 100vh;
   width: 100vw; 
   display: flex;
@@ -10,7 +10,7 @@
   padding: 2rem;
   box-sizing: border-box;
   font-family: 'Helvetica Neue', sans-serif;
-  color: #064232; /* deep green text */
+  color: #064232;
 }
 
 /* Main header */
@@ -18,7 +18,7 @@
   text-align: center;
   font-size: 3rem;
   margin-bottom: 2rem;
-  color: #BB6653; /* warm terracotta accent */
+  color: #BB6653;
   font-weight: bold;
 }
 
@@ -36,7 +36,7 @@
   padding: 0.5rem 0.75rem;
   border-radius: 12px;
   border: 1px solid #BB6653;
-  background: #DEE8CE; /* soft green pastel */
+  background: #DEE8CE;
   color: #064232;
   font-size: 1rem;
   outline: none;
@@ -44,7 +44,7 @@
 }
 
 .input:focus, .select:focus {
-  border-color: #F08B51; /* brighter terracotta */
+  border-color: #F08B51;
   box-shadow: 0 0 5px rgba(240,139,81,0.3);
   background-color: #fff;
 }
@@ -55,8 +55,8 @@
   cursor: pointer;
   border: none;
   border-radius: 12px;
-  background-color: #BB6653; /* terracotta */
-  color: #FFF8E8; /* cream text */
+  background-color: #BB6653;
+  color: #FFF8E8;
   font-weight: bold;
   transition: background-color 0.2s ease, transform 0.1s ease;
 }
@@ -73,26 +73,54 @@
   margin-bottom: 2rem;
   width: 100%;
   max-width: 500px;
-  
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .todoItem {
-    display: flex;
-  justify-content: space-between;
+  display: flex;
   align-items: center;
+  justify-content: space-between; /* checkbox+text left, delete button right */
   margin-bottom: 0.5rem;
   padding: 0.5rem 0.75rem;
   border-radius: 16px;
   background-color: #fff;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.todoLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem; /* small gap between checkbox and text */
 }
 
 .todoText {
-  flex-grow: 1;      /* take up all remaining space */
-  text-align: left;  /* force text left inside its box */
+  text-align: left;         /* left-align text */
+  white-space: normal;      /* allow wrapping */
+  word-break: break-word;   /* break long words if needed */
+  overflow-wrap: anywhere;  /* safety for really long words */
 }
 
+button-delete {
+  background-color: #BB6653;
+  color: #FFF8E8;
+  border: none;
+  border-radius: 12px;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+button-delete:hover {
+  background-color: #F08B51;
+}
+
+.todoItem input[type="checkbox"] {
+  margin: 0;
+}
 
 .todoItem:hover {
   transform: translateY(-2px);
@@ -108,6 +136,6 @@
 /* Section headers */
 h2 {
   text-align: center;
-  color: #BB6653; /* terracotta accent */
+  color: #BB6653;
   font-size: 1.5rem;
 }

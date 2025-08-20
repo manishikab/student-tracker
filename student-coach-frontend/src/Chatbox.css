@@ -48,27 +48,32 @@ h3{
 }
 
 .input-area {
-  display: flex;
-  gap: 5px;
-  margin-bottom: 20px;
+display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  justify-content: center;
 }
 
 input {
   flex: 1;
-  padding: 8px;
-  border-radius: 15px;
-  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid #BB6653; 
+  background: #FFF8E8;
+  color: #064232;
+  font-size: 14px;
 }
 
 button {
-  padding: 8px 15px;
-  border-radius: 15px;
+  padding: 10px 15px;
+  border-radius: 12px;
   border: none;
-  background: #BB6653;
+  background: #BB6653; 
   color: #FFF8E8;
   cursor: pointer;
   font-weight: bold;
+  transition: background 0.2s ease;
 }
 button:hover {
-  background-color: #ff9aba;
+  background-color: #F08B51;
 }

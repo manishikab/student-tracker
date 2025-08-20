@@ -11,7 +11,6 @@ export default function TodoPage() {
   const [newTodo, setNewTodo] = useState("");
   const [category, setCategory] = useState("upcoming");
 
-  // Fetch todos from backend on mount
   useEffect(() => {
     fetchTodos();
   }, []);
@@ -19,7 +18,6 @@ export default function TodoPage() {
   async function fetchTodos() {
     const data = await getTodos();
     setTodos(data);
-    // Update dashboard context with current todos
     setTodoTasks(data);
   }
 
@@ -28,7 +26,7 @@ export default function TodoPage() {
     const created = await createTodo({ title: newTodo, completed: false, category });
     const updatedTodos = [...todos, created];
     setTodos(updatedTodos);
-    setTodoTasks(updatedTodos); // Update dashboard
+    setTodoTasks(updatedTodos);
     setNewTodo("");
     setCategory("today");
   }
@@ -37,14 +35,14 @@ export default function TodoPage() {
     const updated = await updateTodo(todo.id, { ...todo, completed: !todo.completed });
     const updatedTodos = todos.map(t => (t.id === todo.id ? updated : t));
     setTodos(updatedTodos);
-    setTodoTasks(updatedTodos); // Update dashboard
+    setTodoTasks(updatedTodos);
   }
 
   async function handleDelete(todoId) {
     await deleteTodo(todoId);
     const updatedTodos = todos.filter(t => t.id !== todoId);
     setTodos(updatedTodos);
-    setTodoTasks(updatedTodos); // Update dashboard
+    setTodoTasks(updatedTodos);
   }
 
   const todayTodos = todos.filter(todo => todo.category === "today");
@@ -84,19 +82,22 @@ export default function TodoPage() {
       <ul className={styles.todoList}>
         {todayTodos.map((todo) => (
           <li key={todo.id} className={styles.todoItem}>
-            <input
-              type="checkbox"
-              checked={todo.completed}
-              onChange={() => handleToggleComplete(todo)}
-            />
-<span
-  className={`${styles.todoText} ${todo.completed ? styles.completed : ""}`}
->
-  {todo.title}
-</span>
-            <button onClick={() => handleDelete(todo.id)} className={styles.button}>
+            <div className={styles.todoLeft}>
+              <input
+                type="checkbox"
+                checked={todo.completed}
+                onChange={() => handleToggleComplete(todo)}
+              />
+              <span className={`${styles.todoText} ${todo.completed ? styles.completed : ""}`}>
+                {todo.title}
+              </span>
+            </div>
+            <button-delete
+              onClick={() => handleDelete(todo.id)}
+              className={styles.button}
+            >
               Delete
-            </button>
+            </button-delete>
           </li>
         ))}
       </ul>
@@ -105,24 +106,27 @@ export default function TodoPage() {
       <ul className={styles.todoList}>
         {upcomingTodos.map((todo) => (
           <li key={todo.id} className={styles.todoItem}>
-            <input
-              type="checkbox"
-              checked={todo.completed}
-              onChange={() => handleToggleComplete(todo)}
-            />
-            <span
-              className={`${styles.todoText} ${todo.completed ? styles.completed : ""}`}
+            <div className={styles.todoLeft}>
+              <input
+                type="checkbox"
+                checked={todo.completed}
+                onChange={() => handleToggleComplete(todo)}
+              />
+              <span className={`${styles.todoText} ${todo.completed ? styles.completed : ""}`}>
+                {todo.title}
+              </span>
+            </div>
+            <button-delete
+              onClick={() => handleDelete(todo.id)}
+              className={styles.button}
             >
-              {todo.title}
-            </span>
-            <button onClick={() => handleDelete(todo.id)} className={styles.button}>
               Delete
-            </button>
+            </button-delete>
           </li>
         ))}
       </ul>
-      {/* AI Assistant */}
-    <AiAssistant currentPage="todos" todos={todos} />
+
+      <AiAssistant currentPage="todos" todos={todos} />
     </div>
   );
 }
