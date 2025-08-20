@@ -16,7 +16,7 @@ import {
 import AiAssistant from "../components/AiAssistant.jsx";
 
 export default function SleepPage() {
-  const { sleepEntries, setSleepEntries, setSleepHours } = useContext(DashboardContext);
+  const { sleepEntries, setSleepEntries } = useContext(DashboardContext);
 
   const [sleeps, setSleeps] = useState([]);
   const [hours, setHours] = useState("");
@@ -111,7 +111,7 @@ export default function SleepPage() {
   function calculateTrend(entries) {
     if (!entries.length) {
       setTrend(null);
-      setSleepHours(0);
+      setHours(0);
       return;
     }
     const now = new Date();
@@ -132,7 +132,7 @@ export default function SleepPage() {
     else if (avgThisWeek < avgLastWeek) setTrend("You’re sleeping less than last week :(");
     else setTrend("Your sleep is about the same as last week!");
 
-    setSleepHours(avgThisWeek); // persist in context
+    setHours(avgThisWeek); // persist in context
   }
 
   return (

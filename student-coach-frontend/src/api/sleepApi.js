@@ -22,7 +22,11 @@ export async function postSleepEntry(entry) {
     throw new Error(`Server error: ${res.status} - ${err}`);
   }
 
-  return res.json(); // should include id, date, hours
+  try {
+    return await res.json(); // should be valid JSON
+  } catch {
+    return { success: true }; // fallback if parsing fails
+  }
 }
 
 export async function deleteSleepEntry(id) {
