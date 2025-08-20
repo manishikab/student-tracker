@@ -3,7 +3,16 @@ import { DashboardContext } from "../DashboardContext";
 import styles from "../AiAssistant.module.css";
 
 export default function AiAssistant({ currentPage }) {
-  const { todoTasks, sleepEntries, wellnessEntries, exerciseEntries } = useContext(DashboardContext);
+  const { 
+    todoTasks, 
+    sleepEntries, 
+    wellnessEntries, 
+    exerciseEntries,
+    todayExerciseMinutes,
+    todayWellness,
+    lastNightSleepHours
+  } = useContext(DashboardContext);
+
   const [open, setOpen] = useState(false);
   const [chat, setChat] = useState([]);
   const [input, setInput] = useState("");
@@ -20,14 +29,34 @@ export default function AiAssistant({ currentPage }) {
 
   async function fetchTip() {
     try {
+      const promptMessage = `
+Give me a short personalized tip for my ${currentPage}.
+Use the context below to make it accurate:
+- todoTasks count: ${todoTasks.length}
+- todayExerciseMinutes: ${todayExerciseMinutes}
+- todayWellness logged: ${todayWellness ? "yes" : "no"}
+- yesterdaySleepHours: ${lastNightSleepHours}  // <--- new line
+- sleep entries: ${sleepEntries.length} entries
+- exercise entries: ${exerciseEntries.length} entries
+- wellness entries: ${wellnessEntries.length} entries
+Only suggest exercise if todayExerciseMinutes === 0, and only suggest wellness if todayWellness is null.
+`;
+
       const res = await fetch("http://localhost:3001/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message: `Give me a short personalized tip for my ${currentPage}.`,
+          message: promptMessage,
           userId: "default_user",
           page: currentPage,
-          context: { todoTasks, sleepEntries, wellnessEntries, exerciseEntries }
+          context: { 
+            todoTasks, 
+            sleepEntries, 
+            wellnessEntries, 
+            exerciseEntries,
+            todayExerciseMinutes,
+            todayWellness
+          }
         })
       });
 
@@ -49,14 +78,32 @@ export default function AiAssistant({ currentPage }) {
     setInput("");
 
     try {
+      const promptMessage = `
+User message: ${input}
+Context:
+- todayExerciseMinutes: ${todayExerciseMinutes}
+- todayWellness logged: ${todayWellness ? "yes" : "no"}
+- todoTasks count: ${todoTasks.length}
+- sleep entries: ${sleepEntries.length} entries
+- exercise entries: ${exerciseEntries.length} entries
+- wellness entries: ${wellnessEntries.length} entries
+`;
+
       const res = await fetch("http://localhost:3001/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message: input,
+          message: promptMessage,
           userId: "default_user",
           page: currentPage,
-          context: { todoTasks, sleepEntries, wellnessEntries, exerciseEntries }
+          context: { 
+            todoTasks, 
+            sleepEntries, 
+            wellnessEntries, 
+            exerciseEntries,
+            todayExerciseMinutes,
+            todayWellness
+          }
         })
       });
 
@@ -81,7 +128,6 @@ export default function AiAssistant({ currentPage }) {
             ))}
           </div>
 
-          {/* only show input after tip is loaded */}
           {!loadingTip && (
             <div className={styles.inputRow}>
               <input

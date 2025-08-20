@@ -10,7 +10,7 @@ export default function HomePage() {
 
   // Pull dashboard snapshots from context (no extra fetching here)
   const {
-    todoTasks,
+    incompleteTodoTasks,
     todayExerciseMinutes,     // number (total minutes today)
     lastNightSleepHours,      // number (hours last night)
     todayWellness,            // object or null ({mood, energy, ...})
@@ -82,10 +82,12 @@ export default function HomePage() {
         >
           {/* To-Do */}
           <div className="card">
-            ★ <strong>To-Do:</strong>
-            <br />
-            {todoTasks.length > 0 ? `${todoTasks.length} tasks left` : "None!"}
-          </div>
+  ★ <strong>To-Do:</strong>
+  <br />
+  {incompleteTodoTasks.length > 0
+    ? `${incompleteTodoTasks.length} tasks left`
+    : "None!"}
+</div>
 
           {/* Exercise */}
           <div className="card">

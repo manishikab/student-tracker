@@ -10,14 +10,14 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-
 import { DashboardContext } from "../DashboardContext";
 import AiAssistant from "../components/AiAssistant.jsx"; 
 
-
 export default function WellnessPage() {
-  const {wellnessStatus, setWellnessStatus} = useContext(DashboardContext);
-  const [entries, setEntries] = useState([]);
+  const { wellnessStatus, setWellnessStatus } = useContext(DashboardContext);
+
+  const [entries, setEntries] = useState([]);       // for list (newest first)
+  const [chartData, setChartData] = useState([]);   // for chart (oldest first)
   const [mood, setMood] = useState("");
   const [energy, setEnergy] = useState("");
   const [date, setDate] = useState("");
@@ -30,46 +30,72 @@ export default function WellnessPage() {
   }, []);
 
   async function fetchEntries() {
+  try {
     const data = await getWellnessEntries();
-    const sorted = data.sort((a, b) => new Date(a.date) - new Date(b.date));
-    setEntries(sorted);
-    calculateTrend(sorted);
+
+    // Entries list: newest first
+    const newestFirst = [...data].sort((a, b) => new Date(b.date) - new Date(a.date));
+    setEntries(newestFirst);
+
+    // Chart: oldest first
+    const chronological = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
+    setChartData(chronological);
+
+    calculateTrend(newestFirst);
+  } catch (err) {
+    console.error("Failed to fetch wellness entries:", err);
   }
+}
 
   async function handleAddEntry() {
-    if (!date || mood === "" || energy === "") return;
+  if (!date || mood === "" || energy === "") return;
 
-    // Limit mood & energy 0-10
-    const moodVal = Math.min(Math.max(Number(mood), 0), 10);
-    const energyVal = Math.min(Math.max(Number(energy), 0), 10);
+  const moodVal = Math.min(Math.max(Number(mood), 0), 10);
+  const energyVal = Math.min(Math.max(Number(energy), 0), 10);
 
-    const created = await postWellnessEntry({
-      date,
-      mood: moodVal,
-      energy: energyVal,
-      notes: notes || null,
-    });
+  try {
+    const created = await postWellnessEntry({ date, mood: moodVal, energy: energyVal, notes: notes || null });
 
-    const updated = [...entries, created].sort((a, b) => new Date(a.date) - new Date(b.date));
-    setEntries(updated);
+    // Update entries list (newest first)
+    const updatedEntries = [created, ...entries].sort((a, b) => new Date(b.date) - new Date(a.date));
+    setEntries(updatedEntries);
+
+    // Update chart (chronological)
+    const updatedChart = [...updatedEntries].sort((a, b) => new Date(a.date) - new Date(b.date));
+    setChartData(updatedChart);
+
     setMood("");
     setEnergy("");
     setDate("");
     setNotes("");
-    calculateTrend(updated);
+    calculateTrend(updatedEntries);
+  } catch (err) {
+    console.error("Failed to add wellness entry:", err);
   }
+}
 
   async function handleDeleteEntry(id) {
+  try {
     await deleteWellnessEntry(id);
-    const updated = entries.filter((e) => e.id !== id);
-    setEntries(updated);
-    calculateTrend(updated);
-  }
 
-  // Calculate weekly trend for mood & energy
+    // Remove from entries list (newest first)
+    const updatedEntries = entries.filter((e) => e.id !== id);
+    setEntries(updatedEntries);
+
+    // Update chart (chronological)
+    const updatedChart = [...updatedEntries].sort((a, b) => new Date(a.date) - new Date(b.date));
+    setChartData(updatedChart);
+
+    calculateTrend(updatedEntries);
+  } catch (err) {
+    console.error("Failed to delete wellness entry:", err);
+  }
+}
+
   function calculateTrend(entries) {
     if (!entries.length) {
       setTrend(null);
+      setWellnessStatus(0);
       return;
     }
 
@@ -96,7 +122,6 @@ export default function WellnessPage() {
     setWellnessStatus(avgMood);
   }
 
-  // Emoji helpers
   const moodEmoji = (val) => (val >= 8 ? "😄" : val >= 5 ? "😐" : "😞");
   const energyEmoji = (val) => (val >= 8 ? "⚡" : val >= 5 ? "🙂" : "😴");
 
@@ -137,11 +162,9 @@ export default function WellnessPage() {
           placeholder="Notes (optional)"
           className={styles.input}
         />
-        
-  <button onClick={handleAddEntry} className={styles.button}>
-    Add
-  </button>
-
+        <button onClick={handleAddEntry} className={styles.button}>
+          Add
+        </button>
       </div>
 
       {/* Trend message */}
@@ -154,7 +177,7 @@ export default function WellnessPage() {
       {/* Chart */}
       <div style={{ width: "100%", maxWidth: "600px", height: "300px", marginBottom: "2rem" }}>
         <ResponsiveContainer>
-          <LineChart data={entries}>
+          <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="date" />
             <YAxis domain={[0, 10]} />
@@ -177,6 +200,7 @@ export default function WellnessPage() {
           </li>
         ))}
       </ul>
+
       {/* AI Assistant */}
       <AiAssistant currentPage="wellness" />
     </div>

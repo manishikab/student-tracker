@@ -53,8 +53,9 @@ const yesterday = (() => {
 
   // exercise minutes today
   const todayExerciseMinutes = exerciseEntries
-    .filter((e) => e.date === today)
-    .reduce((sum, e) => sum + (e.duration || 0), 0);
+  .filter((e) => e.date === today)
+  .reduce((sum, e) => sum + (e.duration || 0), 0);
+  const todayExercise = exerciseEntries.filter((e) => e.date === today);
 
   // sleep hours last night
   const lastNightSleep = sleepEntries.find((s) => s.date === yesterday) || null;
@@ -62,6 +63,8 @@ const yesterday = (() => {
 
   // wellness entry today
   const todayWellness = wellnessEntries.find((w) => w.date === today) || null;
+
+  const incompleteTodoTasks = todoTasks.filter(task => !task.completed);
 
   return (
     <DashboardContext.Provider
@@ -77,9 +80,12 @@ const yesterday = (() => {
         setWellnessEntries,
 
         // derived
+        incompleteTodoTasks,
         todayExerciseMinutes,
         lastNightSleepHours,
         todayWellness,
+        todayExercise,
+        lastNightSleepHours
       }}
     >
       {children}

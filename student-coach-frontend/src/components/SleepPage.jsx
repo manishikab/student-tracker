@@ -23,7 +23,9 @@ export default function SleepPage() {
   const [date, setDate] = useState("");
   const [average, setAverage] = useState(null);
   const [trend, setTrend] = useState(null);
-  const [goal, setGoal] = useState(8);
+  const [goal, setGoal] = useState(() => {
+    return Number(localStorage.getItem("sleepGoal")) || 8;
+  });
   const [chartData, setChartData] = useState([]);
 
   useEffect(() => {
@@ -36,7 +38,7 @@ export default function SleepPage() {
       const data = await getSleepEntries();
       const normalized = data.map((s) => ({ ...s, date: normalizeDate(s.date) }));
       setSleeps(normalized);
-      setSleepEntries(normalized); // update context
+      setSleepEntries(normalized);
       setChartData(aggregateByDate(normalized));
       calculateTrend(normalized);
     } catch (err) {
@@ -62,16 +64,12 @@ export default function SleepPage() {
     if (hours < 0 || hours > 24) return;
 
     try {
-      console.log({ hours: Number(hours), date });
       const newEntry = await postSleepEntry({ hours: Number(hours), date });
-      if (!newEntry.id) {
-        // fallback id if API doesn’t return one
-        newEntry.id = Date.now();
-      }
+      if (!newEntry.id) newEntry.id = Date.now();
       newEntry.date = normalizeDate(newEntry.date);
       const updated = [...sleeps, newEntry];
       setSleeps(updated);
-      setSleepEntries(updated); // persist in context
+      setSleepEntries(updated);
       setChartData(aggregateByDate(updated));
       calculateTrend(updated);
       setHours("");
@@ -88,7 +86,7 @@ export default function SleepPage() {
       await deleteSleepEntry(id);
       const updated = sleeps.filter((s) => s.id !== id);
       setSleeps(updated);
-      setSleepEntries(updated); // persist in context
+      setSleepEntries(updated);
       setChartData(aggregateByDate(updated));
       calculateTrend(updated);
       fetchSleepAverage();
@@ -132,7 +130,14 @@ export default function SleepPage() {
     else if (avgThisWeek < avgLastWeek) setTrend("You’re sleeping less than last week :(");
     else setTrend("Your sleep is about the same as last week!");
 
-    setHours(avgThisWeek); // persist in context
+    setHours(avgThisWeek);
+  }
+
+  // Handle goal input and persist in localStorage
+  function handleGoalChange(e) {
+    const newGoal = Number(e.target.value);
+    setGoal(newGoal);
+    localStorage.setItem("sleepGoal", newGoal);
   }
 
   return (
@@ -145,7 +150,7 @@ export default function SleepPage() {
           type="number"
           value={hours}
           onChange={(e) => setHours(e.target.value)}
-          placeholder="Hours slept"
+          placeholder="Hours slept (0-24)"
           className={styles.input}
         />
         <input
@@ -168,7 +173,7 @@ export default function SleepPage() {
             value={goal}
             min="0"
             max="24"
-            onChange={(e) => setGoal(Number(e.target.value))}
+            onChange={handleGoalChange}
             className={styles.input}
             style={{ width: "60px", marginLeft: "0.5rem" }}
           />
@@ -211,7 +216,7 @@ export default function SleepPage() {
       {average && (
         <div className={styles.average}>
           Weekly Average: {average.average_hours} hrs{" "}
-          {average.average_hours >= goal ? "🎉 Goal met!" : "💤 Keep going!"}
+          {average.average_hours >= goal ? "- goal met!" : "- try to get more sleep tonight!"}
         </div>
       )}
 
