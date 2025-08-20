@@ -1,22 +1,21 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:8000/goals/";
-
+const BASE_URL = import.meta.env.VITE_API_URL + "/goals";
 export async function getGoals() {
-  const res = await axios.get(API_URL);
+  const res = await axios.get(BASE_URL);
   return res.data;
 }
 
 export async function addGoal(goal) {
-  const res = await axios.post(API_URL, goal);
+  const res = await axios.post(BASE_URL, goal);
   return res.data;
 }
 
 export async function updateGoal(id, goal) {
-  const res = await axios.put(`${API_URL}/${id}`, goal);
+  const res = await axios.put(`${BASE_URL}/${id}`, goal);
   return res.data;
 }
 
 export async function deleteGoal(id) {
-  await axios.delete(`${API_URL}/${id}`);
+  await axios.delete(`${BASE_URL}/${id}`);
 }

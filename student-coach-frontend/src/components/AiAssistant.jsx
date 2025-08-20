@@ -2,6 +2,8 @@ import { useContext, useState, useEffect } from "react";
 import { DashboardContext } from "../DashboardContext";
 import styles from "../AiAssistant.module.css";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+
 export default function AiAssistant({ currentPage }) {
   const { 
     todoTasks, 
@@ -35,14 +37,14 @@ export default function AiAssistant({ currentPage }) {
         - todoTasks count: ${todoTasks.length}
         - todayExerciseMinutes: ${todayExerciseMinutes}
         - todayWellness logged: ${todayWellness ? "yes" : "no"}
-        - yesterdaySleepHours: ${lastNightSleepHours}  // <--- new line
+        - yesterdaySleepHours: ${lastNightSleepHours}
         - sleep entries: ${sleepEntries.length} entries
         - exercise entries: ${exerciseEntries.length} entries
         - wellness entries: ${wellnessEntries.length} entries
         Only suggest exercise if todayExerciseMinutes === 0, and only suggest wellness if todayWellness is null.
-        `;
+      `;
 
-      const res = await fetch("http://localhost:3001/chat", {
+      const res = await fetch(`${API_URL}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -87,9 +89,9 @@ export default function AiAssistant({ currentPage }) {
         - sleep entries: ${sleepEntries.length} entries
         - exercise entries: ${exerciseEntries.length} entries
         - wellness entries: ${wellnessEntries.length} entries
-        `;
+      `;
 
-      const res = await fetch("http://localhost:3001/chat", {
+      const res = await fetch(`${API_URL}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

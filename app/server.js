@@ -7,7 +7,7 @@ import db from "./db.js";
 dotenv.config();
 const app = express();
 app.use(express.json());
-app.use(cors());
+app.use(cors({ origin: process.env.CLIENT_URL }));
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -55,12 +55,12 @@ app.post("/chat", async (req, res) => {
 
     // Format context summary for the AI
     const contextSummary = `
-User dashboard snapshot:
-- Current page: ${page}
-- Todos: ${context.todoTasks?.length || 0} tasks (${context.todoTasks?.slice(0,3).map(t => t.title).join(", ") || "none"})
-- Sleep entries: ${context.sleepEntries?.length || 0} (latest: ${context.sleepEntries?.[0]?.hours || "N/A"} hrs)
-- Exercise entries: ${context.exerciseEntries?.length || 0} (latest: ${context.exerciseEntries?.[0]?.minutes || "N/A"} mins)
-- Wellness entries: ${context.wellnessEntries?.length || 0} (latest: ${context.wellnessEntries?.[0]?.note || "N/A"})
+      User dashboard snapshot:
+      - Current page: ${page}
+      - Todos: ${context.todoTasks?.length || 0} tasks (${context.todoTasks?.slice(0,3).map(t => t.title).join(", ") || "none"})
+      - Sleep entries: ${context.sleepEntries?.length || 0} (latest: ${context.sleepEntries?.[0]?.hours || "N/A"} hrs)
+      - Exercise entries: ${context.exerciseEntries?.length || 0} (latest: ${context.exerciseEntries?.[0]?.minutes || "N/A"} mins)
+      - Wellness entries: ${context.wellnessEntries?.length || 0} (latest: ${context.wellnessEntries?.[0]?.note || "N/A"})
     `;
 
     // Call OpenAI
@@ -70,33 +70,34 @@ User dashboard snapshot:
         {
           role: "system",
           content: `
-You are a supportive college wellness assistant. 
-Rules:
-- Be short (1–5 casual sentences max).
-- Sound friendly, like a peer/friend, not a formal coach.
-- Always ground advice in the context provided below.
-- If the context is empty, encourage the user to log something.
+            You are a supportive college wellness assistant. 
+            Rules:
+            - Be short (1–5 casual sentences max).
+            - Sound friendly, like a peer/friend, not a formal coach.
+            - Always ground advice in the context provided below.
+            - If the context is empty, encourage the user to log something.
 
-Here’s the latest context:
-${contextSummary}
-          `,
-        },
-        ...history,
-        { role: "user", content: message },
-      ],
-      temperature: 0.7,
-    });
+            Here’s the latest context:
+            ${contextSummary}
+                      `,
+                    },
+                    ...history,
+                    { role: "user", content: message },
+                  ],
+                  temperature: 0.7,
+                });
 
-    const aiReply = response.choices[0].message.content;
+                const aiReply = response.choices[0].message.content;
 
-    // Save AI reply
-    saveMessage(userId, "assistant", aiReply);
+                // Save AI reply
+                saveMessage(userId, "assistant", aiReply);
 
-    res.json({ reply: aiReply });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "AI request failed" });
-  }
-});
+                res.json({ reply: aiReply });
+              } catch (err) {
+                console.error(err);
+                res.status(500).json({ error: "AI request failed" });
+              }
+            });
 
-app.listen(3001, () => console.log("Server running on http://localhost:3001"));
+const PORT = process.env.PORT || 3001;          
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
