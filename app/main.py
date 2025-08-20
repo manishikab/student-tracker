@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
-from routes import todo_routes, sleep_routes, wellness_routes, exercise_routes, goals
+from app.routes import todo_routes, sleep_routes, wellness_routes, exercise_routes, goals
 
 load_dotenv()  # load .env
 

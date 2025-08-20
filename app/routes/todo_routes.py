@@ -1,13 +1,12 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from .. import models, schemas
-from ..database import get_db
+from app import models, schemas, database
 
 router = APIRouter(prefix="/todos", tags=["todos"])
 
 # Add Todo Item
 @router.post("/", response_model=schemas.Todo)
-def create_todo(todo: schemas.TodoCreate, db: Session = Depends(get_db)):
+def create_todo(todo: schemas.TodoCreate, db: Session = Depends(database.get_db)):
     db_item = models.TodoItem(**todo.model_dump())
     db.add(db_item)
     db.commit()
@@ -16,12 +15,12 @@ def create_todo(todo: schemas.TodoCreate, db: Session = Depends(get_db)):
 
 # See Todo List
 @router.get("/", response_model=list[schemas.Todo])
-def get_todos(db: Session = Depends(get_db)):
+def get_todos(db: Session = Depends(database.get_db)):
     return db.query(models.TodoItem).all()
 
 # Mark completed or update text
 @router.put("/{todo_id}", response_model=schemas.Todo)
-def update_todo(todo_id: int, todo: schemas.TodoUpdate, db: Session = Depends(get_db)):
+def update_todo(todo_id: int, todo: schemas.TodoUpdate, db: Session = Depends(database.get_db)):
     db_todo = db.query(models.TodoItem).filter(models.TodoItem.id == todo_id).first()
     if todo.completed is not None:
         db_todo.completed = todo.completed
@@ -32,7 +31,7 @@ def update_todo(todo_id: int, todo: schemas.TodoUpdate, db: Session = Depends(ge
 
 # Delete Todo Task
 @router.delete("/{todo_id}")
-def delete_todo(todo_id: int, db: Session = Depends(get_db)):
+def delete_todo(todo_id: int, db: Session = Depends(database.get_db)):
     db_todo = db.query(models.TodoItem).filter(models.TodoItem.id == todo_id).first()
     db.delete(db_todo)
     db.commit()

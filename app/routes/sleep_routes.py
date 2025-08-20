@@ -1,7 +1,6 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from .. import models, schemas
-from ..database import get_db
+from app import models, schemas, database
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import func
 
@@ -9,7 +8,7 @@ router = APIRouter(prefix="/sleep", tags=["sleep"])
 
 # Add Entry
 @router.post("/", response_model=schemas.SleepEntry)
-def log_sleep(entry: schemas.SleepEntryCreate, db: Session = Depends(get_db)):
+def log_sleep(entry: schemas.SleepEntryCreate, db: Session = Depends(database.get_db)):
     db_entry = models.SleepEntry(**entry.model_dump())
     db.add(db_entry)
     db.commit()
@@ -18,12 +17,12 @@ def log_sleep(entry: schemas.SleepEntryCreate, db: Session = Depends(get_db)):
 
 # View Entries
 @router.get("/", response_model=list[schemas.SleepEntry])
-def get_sleep_entries(db: Session = Depends(get_db)):
+def get_sleep_entries(db: Session = Depends(database.get_db)):
     return db.query(models.SleepEntry).order_by(models.SleepEntry.date.desc()).all()
 
 # View Average
 @router.get("/weekly_average")
-def weekly_average(db: Session = Depends(get_db)):
+def weekly_average(db: Session = Depends(database.get_db)):
     today = datetime.now(timezone.utc).date()
     one_week_ago = today - timedelta(days=7)
 
@@ -36,7 +35,7 @@ def weekly_average(db: Session = Depends(get_db)):
     return {"week_start": one_week_ago, "week_end": today, "average_hours": round(avg_sleep or 0, 2)}
 
 @router.delete("/{sleep_id}")
-def delete_sleep(sleep_id: int, db: Session = Depends(get_db)):
+def delete_sleep(sleep_id: int, db: Session = Depends(database.get_db)):
     entry = db.query(models.SleepEntry).filter(models.SleepEntry.id == sleep_id).first()
     db.delete(entry)
     db.commit()
