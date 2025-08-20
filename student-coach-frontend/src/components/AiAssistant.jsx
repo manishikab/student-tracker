@@ -2,7 +2,7 @@ import { useContext, useState, useEffect } from "react";
 import { DashboardContext } from "../DashboardContext";
 import styles from "../AiAssistant.module.css";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export default function AiAssistant({ currentPage }) {
   const { 

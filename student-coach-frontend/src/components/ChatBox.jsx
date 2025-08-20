@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import '../ChatBox.css';
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export default function ChatBox() {
   const [input, setInput] = useState('');

@@ -83,7 +83,6 @@ export function DashboardProvider({ children }) {
         lastNightSleepHours,
         todayWellness,
         todayExercise,
-        lastNightSleepHours
       }}
     >
       {children}
