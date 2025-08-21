@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { DashboardContext } from '../DashboardContext';
-import '../ChatBox.css';
+import '../Chatbox.css';
 import { EXPRESS_URL } from '../config.js';
 
 export default function ChatBox({ currentPage }) {
