@@ -6,6 +6,10 @@ import db from "./db.js";
 
 dotenv.config();
 const app = express();
+app.get("/", (req, res) => {
+  res.json({ status: "ok", service: "student-coach-express" });
+});
+
 app.use(express.json());
 app.use(cors({ origin: process.env.CLIENT_URL }));
 

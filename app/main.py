@@ -11,6 +11,10 @@ FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
 app = FastAPI()
 
+@app.get("/")
+def root():
+    return {"status": "ok", "service": "student-coach-fastapi"}
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[FRONTEND_URL],
