@@ -34,3 +34,7 @@ app.include_router(sleep_routes.router)
 app.include_router(wellness_routes.router)
 app.include_router(exercise_routes.router)
 app.include_router(goals.router)
+
+@app.get("/test-cors")
+def test_cors():
+    return {"message": "CORS should work"}
