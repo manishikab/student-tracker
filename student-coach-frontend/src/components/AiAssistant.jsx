@@ -1,6 +1,6 @@
 import { useContext, useState, useEffect } from "react";
 import { DashboardContext } from "../DashboardContext";
-import styles from "../AiAssistant.module.css";
+import styles from "../AIAssistant.module.css";
 import { EXPRESS_URL } from "../config.js";
 
 export default function AiAssistant({ currentPage }) {
