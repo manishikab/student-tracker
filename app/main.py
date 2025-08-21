@@ -15,9 +15,15 @@ app = FastAPI()
 def root():
     return {"status": "ok", "service": "student-coach-fastapi"}
 
+
+origins = [
+    "http://localhost:5173",
+    "https://ai-student-coach-frontend.onrender.com",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
