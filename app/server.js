@@ -11,7 +11,7 @@ const app = express();
 // --- CORS setup ---
 const allowedOrigins = [
   "http://localhost:5173",                  // Vite dev
-  "https://your-frontend-deployed-url.com" // replace with your deployed frontend
+  "https://ai-student-coach-frontend.onrender.com" // your deployed frontend
 ];
 
 app.use(cors({
@@ -23,12 +23,14 @@ app.use(cors({
     }
     return callback(null, true);
   },
+  methods: ["GET", "POST", "OPTIONS"], // allow these HTTP methods
   credentials: true
 }));
 
 // parse JSON
 app.use(express.json());
 
+// --- OpenAI setup ---
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // --- Basic status route ---
@@ -101,5 +103,6 @@ app.post("/chat", async (req, res) => {
   }
 });
 
+// --- Listen ---
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
