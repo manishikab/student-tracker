@@ -19,6 +19,8 @@ export function DashboardProvider({ children }) {
   const [sleepEntries, setSleepEntries] = useState([]);
   const [wellnessEntries, setWellnessEntries] = useState([]);
 
+  const [wellnessStatus, setWellnessStatus] = useState(0);
+
   // fetch on mount
   useEffect(() => {
   async function fetchAll() {
@@ -83,6 +85,9 @@ export function DashboardProvider({ children }) {
         lastNightSleepHours,
         todayWellness,
         todayExercise,
+
+        wellnessStatus,
+        setWellnessStatus,
       }}
     >
       {children}
