@@ -1,8 +1,10 @@
 import styles from "../TodoPage.module.css";
-import { useState, useEffect, useContext } from "react";
-import { getTodos, createTodo, updateTodo, deleteTodo } from "../api/todoApi.js";
+import React, { useState, useEffect, useContext } from "react";
 import { DashboardContext } from "../DashboardContext";
-import AiAssistant from "../components/AiAssistant.jsx"; 
+import AiAssistant from "../components/AiAssistant.jsx";
+
+// Use deployed FastAPI URL from env
+const API_URL = import.meta.env.VITE_FASTAPI_URL;
 
 export default function TodoPage() {
   const { todoTasks, setTodoTasks } = useContext(DashboardContext);
@@ -16,37 +18,64 @@ export default function TodoPage() {
   }, []);
 
   async function fetchTodos() {
-    const data = await getTodos();
-    setTodos(data);
-    setTodoTasks(data);
+    try {
+      const res = await fetch(`${API_URL}/todos/`);
+      const data = await res.json();
+      setTodos(data);
+      setTodoTasks(data);
+    } catch (err) {
+      console.error("Failed to fetch todos:", err);
+    }
   }
 
   async function handleAddTodo() {
     if (!newTodo.trim()) return;
-    const created = await createTodo({ title: newTodo, completed: false, category });
-    const updatedTodos = [...todos, created];
-    setTodos(updatedTodos);
-    setTodoTasks(updatedTodos);
-    setNewTodo("");
-    setCategory("today");
+    try {
+      const res = await fetch(`${API_URL}/todos/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: newTodo, completed: false, category }),
+      });
+      const created = await res.json();
+      const updatedTodos = [...todos, created];
+      setTodos(updatedTodos);
+      setTodoTasks(updatedTodos);
+      setNewTodo("");
+      setCategory("today");
+    } catch (err) {
+      console.error("Failed to create todo:", err);
+    }
   }
 
   async function handleToggleComplete(todo) {
-    const updated = await updateTodo(todo.id, { ...todo, completed: !todo.completed });
-    const updatedTodos = todos.map(t => (t.id === todo.id ? updated : t));
-    setTodos(updatedTodos);
-    setTodoTasks(updatedTodos);
+    try {
+      const res = await fetch(`${API_URL}/todos/${todo.id}/`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...todo, completed: !todo.completed }),
+      });
+      const updated = await res.json();
+      const updatedTodos = todos.map((t) => (t.id === todo.id ? updated : t));
+      setTodos(updatedTodos);
+      setTodoTasks(updatedTodos);
+    } catch (err) {
+      console.error("Failed to update todo:", err);
+    }
   }
 
   async function handleDelete(todoId) {
-    await deleteTodo(todoId);
-    const updatedTodos = todos.filter(t => t.id !== todoId);
-    setTodos(updatedTodos);
-    setTodoTasks(updatedTodos);
+    try {
+      await fetch(`${API_URL}/todos/${todoId}/`, { method: "DELETE" });
+      const updatedTodos = todos.filter((t) => t.id !== todoId);
+      setTodos(updatedTodos);
+      setTodoTasks(updatedTodos);
+    } catch (err) {
+      console.error("Failed to delete todo:", err);
+    }
   }
 
-  const todayTodos = todos.filter(todo => todo.category === "today");
-  const upcomingTodos = todos.filter(todo => todo.category === "upcoming");
+  const todayTodos = todos.filter((todo) => todo.category === "today");
+  const upcomingTodos = todos.filter((todo) => todo.category === "upcoming");
 
   return (
     <div className={styles.container}>
@@ -88,16 +117,20 @@ export default function TodoPage() {
                 checked={todo.completed}
                 onChange={() => handleToggleComplete(todo)}
               />
-              <span className={`${styles.todoText} ${todo.completed ? styles.completed : ""}`}>
+              <span
+                className={`${styles.todoText} ${
+                  todo.completed ? styles.completed : ""
+                }`}
+              >
                 {todo.title}
               </span>
             </div>
-            <button-delete
+            <button
               onClick={() => handleDelete(todo.id)}
               className={styles.button}
             >
               Delete
-            </button-delete>
+            </button>
           </li>
         ))}
       </ul>
@@ -112,16 +145,20 @@ export default function TodoPage() {
                 checked={todo.completed}
                 onChange={() => handleToggleComplete(todo)}
               />
-              <span className={`${styles.todoText} ${todo.completed ? styles.completed : ""}`}>
+              <span
+                className={`${styles.todoText} ${
+                  todo.completed ? styles.completed : ""
+                }`}
+              >
                 {todo.title}
               </span>
             </div>
-            <button-delete
+            <button
               onClick={() => handleDelete(todo.id)}
               className={styles.button}
             >
               Delete
-            </button-delete>
+            </button>
           </li>
         ))}
       </ul>

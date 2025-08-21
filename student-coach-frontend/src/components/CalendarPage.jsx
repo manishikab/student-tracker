@@ -1,23 +1,54 @@
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { DashboardContext } from "../DashboardContext";
 import "../CalendarPage.css";
 
-export default function CalendarPage() {
-  const { sleepEntries, exerciseEntries, wellnessEntries } = useContext(DashboardContext);
+const API_URL = import.meta.env.VITE_FASTAPI_URL;
 
+export default function CalendarPage() {
+  const { sleepEntries: contextSleep, exerciseEntries: contextExercise, wellnessEntries: contextWellness } = useContext(DashboardContext);
+
+  const [sleepEntries, setSleepEntries] = useState([]);
+  const [exerciseEntries, setExerciseEntries] = useState([]);
+  const [wellnessEntries, setWellnessEntries] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [loading, setLoading] = useState(true);
 
-  // Parse a YYYY-MM-DD string as a local Date
+  // Fetch entries from FastAPI
+  useEffect(() => {
+    async function fetchEntries() {
+      try {
+        setLoading(true);
+        const [sleepRes, exerciseRes, wellnessRes] = await Promise.all([
+          fetch(`${API_URL}/sleep/`).then(r => r.json()),
+          fetch(`${API_URL}/exercise/`).then(r => r.json()),
+          fetch(`${API_URL}/wellness/`).then(r => r.json()),
+        ]);
+
+        setSleepEntries(sleepRes || contextSleep || []);
+        setExerciseEntries(exerciseRes || contextExercise || []);
+        setWellnessEntries(wellnessRes || contextWellness || []);
+      } catch (err) {
+        console.error("Failed to fetch entries:", err);
+        setSleepEntries(contextSleep || []);
+        setExerciseEntries(contextExercise || []);
+        setWellnessEntries(contextWellness || []);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchEntries();
+  }, [contextSleep, contextExercise, contextWellness]);
+
   function parseLocalDate(d) {
     if (d instanceof Date) return d;
     const [year, month, day] = d.split("-").map(Number);
     return new Date(year, month - 1, day);
   }
 
-  // Format date in local YYYY-MM-DD
   function formatDate(d) {
     const dateObj = parseLocalDate(d);
     const year = dateObj.getFullYear();
@@ -26,16 +57,8 @@ export default function CalendarPage() {
     return `${year}-${month}-${day}`;
   }
 
-  // Normalize all entries
-  const markedDates = new Set([
-    ...sleepEntries.map((e) => formatDate(e.date)),
-    ...exerciseEntries.map((e) => formatDate(e.date)),
-    ...wellnessEntries.map((e) => formatDate(e.date)),
-  ]);
-
   function tileContent({ date, view }) {
     if (view !== "month") return null;
-
     const day = formatDate(date);
 
     const hasSleep = sleepEntries.some((e) => formatDate(e.date) === day);
@@ -65,12 +88,13 @@ export default function CalendarPage() {
     setSelectedDate(today);
   }
 
+  if (loading) return <p>Loading calendar...</p>;
+
   return (
     <div className="calendar-page">
       <header>Activity Calendar</header>
 
       <div className="calendar-container">
-        {/* LEFT: Calendar + daily summary */}
         <div className="calendar-left">
           <Calendar
             onClickDay={(date) => setSelectedDate(date)}
@@ -92,7 +116,6 @@ export default function CalendarPage() {
           )}
         </div>
 
-        {/* RIGHT: Legend + Button */}
         <div className="calendar-right">
           <div className="calendar-legend-wrapper">
             <div className="legend-item"><span className="dot sleep"></span> Sleep</div>

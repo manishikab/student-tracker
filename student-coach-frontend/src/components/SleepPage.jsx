@@ -1,8 +1,7 @@
 import styles from "../SleepPage.module.css";
 import { useState, useEffect, useContext } from "react";
-import { getSleepEntries, postSleepEntry, getSleepAverage, deleteSleepEntry } from "../api/sleepApi.js";
 import { DashboardContext } from "../DashboardContext";
-
+import AiAssistant from "../components/AiAssistant.jsx";
 import {
   LineChart,
   Line,
@@ -13,7 +12,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-import AiAssistant from "../components/AiAssistant.jsx";
+const API_URL = import.meta.env.VITE_FASTAPI_URL;
 
 export default function SleepPage() {
   const { sleepEntries, setSleepEntries } = useContext(DashboardContext);
@@ -23,9 +22,7 @@ export default function SleepPage() {
   const [date, setDate] = useState("");
   const [average, setAverage] = useState(null);
   const [trend, setTrend] = useState(null);
-  const [goal, setGoal] = useState(() => {
-    return Number(localStorage.getItem("sleepGoal")) || 8;
-  });
+  const [goal, setGoal] = useState(() => Number(localStorage.getItem("sleepGoal")) || 8);
   const [chartData, setChartData] = useState([]);
 
   useEffect(() => {
@@ -35,8 +32,9 @@ export default function SleepPage() {
 
   async function fetchSleepEntries() {
     try {
-      const data = await getSleepEntries();
-      const normalized = data.map((s) => ({ ...s, date: normalizeDate(s.date) }));
+      const res = await fetch(`${API_URL}/sleep/`);
+      const data = await res.json();
+      const normalized = data.map((s) => ({ ...s, date: s.date.split("T")[0] }));
       setSleeps(normalized);
       setSleepEntries(normalized);
       setChartData(aggregateByDate(normalized));
@@ -48,15 +46,12 @@ export default function SleepPage() {
 
   async function fetchSleepAverage() {
     try {
-      const avg = await getSleepAverage();
+      const res = await fetch(`${API_URL}/sleep/average/`);
+      const avg = await res.json();
       setAverage(avg);
     } catch (err) {
-      console.error("Failed to fetch average:", err);
+      console.error("Failed to fetch sleep average:", err);
     }
-  }
-
-  function normalizeDate(d) {
-    return new Date(d).toISOString().split("T")[0];
   }
 
   async function handleAddSleep() {
@@ -64,10 +59,13 @@ export default function SleepPage() {
     if (hours < 0 || hours > 24) return;
 
     try {
-      const newEntry = await postSleepEntry({ hours: Number(hours), date });
-      if (!newEntry.id) newEntry.id = Date.now();
-      newEntry.date = normalizeDate(newEntry.date);
-      const updated = [...sleeps, newEntry];
+      const res = await fetch(`${API_URL}/sleep/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hours: Number(hours), date }),
+      });
+      const newEntry = await res.json();
+      const updated = [...sleeps, { ...newEntry, date: newEntry.date.split("T")[0] }];
       setSleeps(updated);
       setSleepEntries(updated);
       setChartData(aggregateByDate(updated));
@@ -83,7 +81,7 @@ export default function SleepPage() {
 
   async function handleDeleteSleep(id) {
     try {
-      await deleteSleepEntry(id);
+      await fetch(`${API_URL}/sleep/${id}/`, { method: "DELETE" });
       const updated = sleeps.filter((s) => s.id !== id);
       setSleeps(updated);
       setSleepEntries(updated);
@@ -97,8 +95,7 @@ export default function SleepPage() {
 
   function aggregateByDate(entries) {
     const grouped = entries.reduce((acc, entry) => {
-      if (!acc[entry.date]) acc[entry.date] = 0;
-      acc[entry.date] += entry.hours;
+      acc[entry.date] = (acc[entry.date] || 0) + entry.hours;
       return acc;
     }, {});
     return Object.entries(grouped)
@@ -113,15 +110,11 @@ export default function SleepPage() {
       return;
     }
     const now = new Date();
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(now.getDate() - 7);
-    const twoWeeksAgo = new Date();
-    twoWeeksAgo.setDate(now.getDate() - 14);
+    const oneWeekAgo = new Date(); oneWeekAgo.setDate(now.getDate() - 7);
+    const twoWeeksAgo = new Date(); twoWeeksAgo.setDate(now.getDate() - 14);
 
     const thisWeek = entries.filter((s) => new Date(s.date) >= oneWeekAgo);
-    const lastWeek = entries.filter(
-      (s) => new Date(s.date) >= twoWeeksAgo && new Date(s.date) < oneWeekAgo
-    );
+    const lastWeek = entries.filter((s) => new Date(s.date) >= twoWeeksAgo && new Date(s.date) < oneWeekAgo);
 
     const avgThisWeek = thisWeek.reduce((sum, s) => sum + s.hours, 0) / (thisWeek.length || 1);
     const avgLastWeek = lastWeek.reduce((sum, s) => sum + s.hours, 0) / (lastWeek.length || 1);
@@ -133,7 +126,6 @@ export default function SleepPage() {
     setHours(avgThisWeek);
   }
 
-  // Handle goal input and persist in localStorage
   function handleGoalChange(e) {
     const newGoal = Number(e.target.value);
     setGoal(newGoal);
@@ -159,9 +151,7 @@ export default function SleepPage() {
           onChange={(e) => setDate(e.target.value)}
           className={styles.input}
         />
-        <button onClick={handleAddSleep} className={styles.button}>
-          Add
-        </button>
+        <button onClick={handleAddSleep} className={styles.button}>Add</button>
       </div>
 
       {/* Sleep Goal */}
@@ -176,8 +166,7 @@ export default function SleepPage() {
             onChange={handleGoalChange}
             className={styles.input}
             style={{ width: "60px", marginLeft: "0.5rem" }}
-          />
-          {" "}hrs
+          /> hrs
         </label>
       </div>
 
@@ -197,7 +186,7 @@ export default function SleepPage() {
       {/* Trend Message */}
       {trend && <div style={{ marginBottom: "1rem", fontWeight: "bold", textAlign: "center" }}>{trend}</div>}
 
-      {/* Sleep Entries list */}
+      {/* Sleep Entries */}
       <ul className={styles.sleepList}>
         {sleeps.map((s) => (
           <li key={s.id} className={styles.sleepItem}>
@@ -205,9 +194,7 @@ export default function SleepPage() {
               <strong>{s.date}</strong> —{" "}
               <span style={{ color: s.hours < 6 ? "red" : "green" }}>{s.hours} hours</span>
             </span>
-            <button onClick={() => handleDeleteSleep(s.id)} className={styles.button}>
-              Delete
-            </button>
+            <button onClick={() => handleDeleteSleep(s.id)} className={styles.button}>Delete</button>
           </li>
         ))}
       </ul>
@@ -220,7 +207,6 @@ export default function SleepPage() {
         </div>
       )}
 
-      {/* AI Assistant */}
       <AiAssistant currentPage="sleep" />
     </div>
   );

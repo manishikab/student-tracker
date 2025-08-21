@@ -8,32 +8,27 @@ export default function HomePage() {
   const [goals, setGoals] = useState([]);
   const [goalInput, setGoalInput] = useState("");
 
-  // pull from dash
-  const {
-    incompleteTodoTasks,
-    todayExerciseMinutes,     
-    lastNightSleepHours,     
-    todayWellness,           
-  } = useContext(DashboardContext);
+  const { incompleteTodoTasks, todayExerciseMinutes, lastNightSleepHours, todayWellness } =
+    useContext(DashboardContext);
 
-  // Load goals from API
   useEffect(() => {
-    async function fetchGoals() {
-      try {
-        const data = await getGoals();
-        setGoals(data);
-      } catch (err) {
-        console.error("Failed to fetch goals:", err);
-      }
-    }
-    fetchGoals();
-  }, []);
-
-  // Add goal
-  const addGoal = async () => {
-    if (goalInput.trim() === "") return;
+  async function fetchGoals() {
     try {
-      const newGoal = await apiAddGoal({ text: goalInput, done: false });
+      const data = await getGoals();
+      setGoals(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to fetch goals:", err);
+      setGoals([]); // fallback to empty array
+    }
+  }
+  fetchGoals();
+}, []);
+
+
+  const addGoal = async () => {
+    if (!goalInput.trim()) return;
+    try {
+      const newGoal = await apiAddGoal({ text: goalInput.trim(), done: false });
       setGoals([newGoal, ...goals]);
       setGoalInput("");
     } catch (err) {
@@ -41,7 +36,6 @@ export default function HomePage() {
     }
   };
 
-  // Toggle goal
   const toggleGoal = async (index) => {
     const goal = goals[index];
     try {
@@ -54,7 +48,6 @@ export default function HomePage() {
     }
   };
 
-  // Delete goal
   const deleteGoal = async (id) => {
     try {
       await apiDeleteGoal(id);
@@ -67,56 +60,30 @@ export default function HomePage() {
   return (
     <div className="container">
       <div className="homepage">
-        <h1>
-          Student Life, Simplified.
-        </h1>
+        <h1>Student Life, Simplified.</h1>
         <h2>Your AI-powered hub for school, health, and balance.</h2>
 
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            gap: "1rem",
-            margin: "2rem 0",
-          }}
-        >
-          {/* To-Do */}
+        <div className="status-cards">
           <div className="card">
-            ★ <strong>To-Do:</strong>
-            <br />
-            {incompleteTodoTasks.length > 0
-              ? `${incompleteTodoTasks.length} tasks left`
-              : "None!"}
+            ★ <strong>To-Do:</strong><br />
+            {incompleteTodoTasks.length ? `${incompleteTodoTasks.length} tasks left` : "None!"}
           </div>
-
-          {/* Exercise */}
           <div className="card">
-            ★ <strong>Exercise:</strong>
-            <br />
-            {todayExerciseMinutes > 0
-              ? `${todayExerciseMinutes} min today`
-              : "Log your exercise!"}
+            ★ <strong>Exercise:</strong><br />
+            {todayExerciseMinutes > 0 ? `${todayExerciseMinutes} min today` : "Log your exercise!"}
           </div>
-
-          {/* Sleep */}
           <div className="card">
-            ★ <strong>Sleep:</strong>
-            <br />
-            {lastNightSleepHours > 0
-              ? `${lastNightSleepHours} hrs last night`
-              : "Log your sleep hours!"}
+            ★ <strong>Sleep:</strong><br />
+            {lastNightSleepHours > 0 ? `${lastNightSleepHours} hrs last night` : "Log your sleep hours!"}
           </div>
-
-          {/* Wellness */}
-            <div className="card">
-              ★ <strong>Wellness:</strong><br />
-              {todayWellness
-                ? `Mood: ${todayWellness.mood}/10, Energy: ${todayWellness.energy}/10`
-                : "Log your daily wellness check-in!"}
-            </div>
+          <div className="card">
+            ★ <strong>Wellness:</strong><br />
+            {todayWellness
+              ? `Mood: ${todayWellness.mood}/10, Energy: ${todayWellness.energy}/10`
+              : "Log your daily wellness check-in!"}
+          </div>
         </div>
 
-        {/* Goal Box */}
         <div className="goal-box">
           <h2>My Goals</h2>
           <div className="goal-input">
@@ -126,28 +93,19 @@ export default function HomePage() {
               onChange={(e) => setGoalInput(e.target.value)}
               placeholder="Add a new goal..."
               onKeyDown={(e) => {
-                if (e.key === "Enter" && goalInput.trim()) {
-                  addGoal();
-                  e.preventDefault();
-                }
+                if (e.key === "Enter") addGoal();
               }}
             />
             <button onClick={addGoal}>Add</button>
           </div>
+
           <ul>
             {goals.map((goal, i) => (
               <li key={goal.id} className={goal.done ? "done" : ""}>
                 <span onClick={() => toggleGoal(i)}>{goal.text}</span>
                 <button
                   onClick={() => deleteGoal(goal.id)}
-                  style={{
-                    marginLeft: "10px",
-                    background: "transparent",
-                    border: "none",
-                    color: "#BB6653",
-                    fontWeight: "bold",
-                    cursor: "pointer",
-                  }}
+                  className="delete-goal-btn"
                 >
                   ✕
                 </button>
@@ -156,7 +114,6 @@ export default function HomePage() {
           </ul>
         </div>
 
-        {/* AI Chat */}
         <div className="chat-section">
           <ChatBox />
         </div>

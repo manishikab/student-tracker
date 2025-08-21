@@ -1,8 +1,7 @@
 import { useContext, useState, useEffect } from "react";
 import { DashboardContext } from "../DashboardContext";
 import styles from "../AiAssistant.module.css";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+import { EXPRESS_URL } from "../config.js";
 
 export default function AiAssistant({ currentPage }) {
   const { 
@@ -18,104 +17,93 @@ export default function AiAssistant({ currentPage }) {
   const [open, setOpen] = useState(false);
   const [chat, setChat] = useState([]);
   const [input, setInput] = useState("");
-  const [loadingTip, setLoadingTip] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  // fetch tip when chat opens
+  // Fetch a tip when chat first opens
   useEffect(() => {
-    if (open && chat.length === 0) {
-      setLoadingTip(true);
-      setChat([{ role: "assistant", content: "Thinking..." }]);
-      fetchTip();
-    }
+    if (open && chat.length === 0) fetchTip();
   }, [open]);
 
-  async function fetchTip() {
-    try {
-      const promptMessage = `
-        Give me a short personalized tip for my ${currentPage}.
-        Use the context below to make it accurate:
-        - todoTasks count: ${todoTasks.length}
-        - todayExerciseMinutes: ${todayExerciseMinutes}
-        - todayWellness logged: ${todayWellness ? "yes" : "no"}
-        - yesterdaySleepHours: ${lastNightSleepHours}
-        - sleep entries: ${sleepEntries.length} entries
-        - exercise entries: ${exerciseEntries.length} entries
-        - wellness entries: ${wellnessEntries.length} entries
-        Only suggest exercise if todayExerciseMinutes === 0, and only suggest wellness if todayWellness is null.
-      `;
+  const fetchTip = async () => {
+    setLoading(true);
+    setChat([{ role: "assistant", content: "Thinking..." }]);
 
-      const res = await fetch(`${API_URL}/chat`, {
+    const promptMessage = `
+      Give a short personalized tip for ${currentPage}.
+      Context:
+      - todoTasks: ${todoTasks.length}
+      - todayExerciseMinutes: ${todayExerciseMinutes}
+      - todayWellness: ${todayWellness ? "yes" : "no"}
+      - yesterdaySleepHours: ${lastNightSleepHours}
+      - sleep entries: ${sleepEntries.length}
+      - exercise entries: ${exerciseEntries.length}
+      - wellness entries: ${wellnessEntries.length}
+      Only suggest exercise if todayExerciseMinutes === 0, and only suggest wellness if todayWellness is null.
+    `;
+
+    try {
+      const res = await fetch(`${EXPRESS_URL}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: promptMessage,
           userId: "default_user",
           page: currentPage,
-          context: { 
-            todoTasks, 
-            sleepEntries, 
-            wellnessEntries, 
-            exerciseEntries,
-            todayExerciseMinutes,
-            todayWellness
-          }
+          context: { todoTasks, sleepEntries, wellnessEntries, exerciseEntries, todayExerciseMinutes, todayWellness }
         })
       });
 
       const data = await res.json();
-
-      setChat([{ role: "assistant", content: data.reply }]);
-      setLoadingTip(false);
+      setChat([{ role: "assistant", content: data.reply || "No response." }]);
     } catch (err) {
       console.error(err);
       setChat([{ role: "assistant", content: "Sorry, something went wrong." }]);
-      setLoadingTip(false);
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
-  async function sendMessage() {
+  const sendMessage = async () => {
     if (!input.trim()) return;
 
-    setChat([...chat, { role: "user", content: input }]);
+    const userMessage = input.trim();
+    setChat(prev => [...prev, { role: "user", content: userMessage }]);
     setInput("");
+    setLoading(true);
+
+    const promptMessage = `
+      User message: ${userMessage}
+      Context:
+      - todoTasks: ${todoTasks.length}
+      - todayExerciseMinutes: ${todayExerciseMinutes}
+      - todayWellness: ${todayWellness ? "yes" : "no"}
+      - yesterdaySleepHours: ${lastNightSleepHours}
+      - sleep entries: ${sleepEntries.length}
+      - exercise entries: ${exerciseEntries.length}
+      - wellness entries: ${wellnessEntries.length}
+    `;
 
     try {
-      const promptMessage = `
-        User message: ${input}
-        Context:
-        - todayExerciseMinutes: ${todayExerciseMinutes}
-        - todayWellness logged: ${todayWellness ? "yes" : "no"}
-        - todoTasks count: ${todoTasks.length}
-        - sleep entries: ${sleepEntries.length} entries
-        - exercise entries: ${exerciseEntries.length} entries
-        - wellness entries: ${wellnessEntries.length} entries
-      `;
-
-      const res = await fetch(`${API_URL}/chat`, {
+      const res = await fetch(`${EXPRESS_URL}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: promptMessage,
           userId: "default_user",
           page: currentPage,
-          context: { 
-            todoTasks, 
-            sleepEntries, 
-            wellnessEntries, 
-            exerciseEntries,
-            todayExerciseMinutes,
-            todayWellness
-          }
+          context: { todoTasks, sleepEntries, wellnessEntries, exerciseEntries, todayExerciseMinutes, todayWellness }
         })
       });
 
       const data = await res.json();
-      setChat(c => [...c, { role: "assistant", content: data.reply }]);
+      setChat(prev => [...prev, { role: "assistant", content: data.reply || "No response." }]);
     } catch (err) {
       console.error(err);
-      setChat(c => [...c, { role: "assistant", content: "Sorry, something went wrong." }]);
+      setChat(prev => [...prev, { role: "assistant", content: "Sorry, something went wrong." }]);
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className={styles.assistantWrapper}>
@@ -130,22 +118,21 @@ export default function AiAssistant({ currentPage }) {
             ))}
           </div>
 
-          {!loadingTip && (
-            <div className={styles.inputRow}>
-              <input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask me anything..."
-              />
-              <button onClick={sendMessage}>Send</button>
-            </div>
-          )}
+          <div className={styles.inputRow}>
+            <input
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              placeholder="Ask me anything..."
+              onKeyDown={e => { if (e.key === "Enter") sendMessage(); }}
+              disabled={loading}
+            />
+            <button onClick={sendMessage} disabled={loading}>
+              {loading ? "Thinking..." : "Send"}
+            </button>
+          </div>
         </div>
       )}
-      <button
-        className={styles.fab}
-        onClick={() => setOpen(!open)}
-      >
+      <button className={styles.fab} onClick={() => setOpen(!open)}>
         {open ? "×" : "🤖"}
       </button>
     </div>

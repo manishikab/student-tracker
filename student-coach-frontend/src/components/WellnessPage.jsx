@@ -1,6 +1,7 @@
 import styles from "../WellnessPage.module.css";
-import { useState, useEffect , useContext } from "react";
-import { getWellnessEntries, postWellnessEntry, deleteWellnessEntry } from "../api/wellnessAPI.js";
+import { useState, useEffect, useContext } from "react";
+import { DashboardContext } from "../DashboardContext";
+import AiAssistant from "../components/AiAssistant.jsx";
 import {
   LineChart,
   Line,
@@ -10,87 +11,95 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { DashboardContext } from "../DashboardContext";
-import AiAssistant from "../components/AiAssistant.jsx"; 
+
+// Use deployed FastAPI URL from env
+const API_URL = import.meta.env.VITE_FASTAPI_URL;
 
 export default function WellnessPage() {
   const { wellnessStatus, setWellnessStatus } = useContext(DashboardContext);
 
-  const [entries, setEntries] = useState([]);       // for list (newest first)
-  const [chartData, setChartData] = useState([]);   // for chart (oldest first)
+  const [entries, setEntries] = useState([]);
+  const [chartData, setChartData] = useState([]);
   const [mood, setMood] = useState("");
   const [energy, setEnergy] = useState("");
   const [date, setDate] = useState("");
   const [notes, setNotes] = useState("");
   const [trend, setTrend] = useState(null);
 
-  // Fetch entries on mount
   useEffect(() => {
     fetchEntries();
   }, []);
 
   async function fetchEntries() {
-  try {
-    const data = await getWellnessEntries();
+    try {
+      const res = await fetch(`${API_URL}/wellness/`);
+      const data = await res.json();
 
-    // Entries list: newest first
-    const newestFirst = [...data].sort((a, b) => new Date(b.date) - new Date(a.date));
-    setEntries(newestFirst);
+      // Entries list: newest first
+      const newestFirst = [...data].sort((a, b) => new Date(b.date) - new Date(a.date));
+      setEntries(newestFirst);
 
-    // Chart: oldest first
-    const chronological = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
-    setChartData(chronological);
+      // Chart: oldest first
+      const chronological = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
+      setChartData(chronological);
 
-    calculateTrend(newestFirst);
-  } catch (err) {
-    console.error("Failed to fetch wellness entries:", err);
+      calculateTrend(newestFirst);
+    } catch (err) {
+      console.error("Failed to fetch wellness entries:", err);
+    }
   }
-}
 
   async function handleAddEntry() {
-  if (!date || mood === "" || energy === "") return;
+    if (!date || mood === "" || energy === "") return;
 
-  const moodVal = Math.min(Math.max(Number(mood), 0), 10);
-  const energyVal = Math.min(Math.max(Number(energy), 0), 10);
+    const moodVal = Math.min(Math.max(Number(mood), 0), 10);
+    const energyVal = Math.min(Math.max(Number(energy), 0), 10);
 
-  try {
-    const created = await postWellnessEntry({ date, mood: moodVal, energy: energyVal, notes: notes || null });
+    try {
+      const res = await fetch(`${API_URL}/wellness/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date, mood: moodVal, energy: energyVal, notes: notes || null }),
+      });
+      const created = await res.json();
 
-    // Update entries list (newest first)
-    const updatedEntries = [created, ...entries].sort((a, b) => new Date(b.date) - new Date(a.date));
-    setEntries(updatedEntries);
+      const updatedEntries = [created, ...entries].sort(
+        (a, b) => new Date(b.date) - new Date(a.date)
+      );
+      setEntries(updatedEntries);
 
-    // Update chart (chronological)
-    const updatedChart = [...updatedEntries].sort((a, b) => new Date(a.date) - new Date(b.date));
-    setChartData(updatedChart);
+      const updatedChart = [...updatedEntries].sort(
+        (a, b) => new Date(a.date) - new Date(b.date)
+      );
+      setChartData(updatedChart);
 
-    setMood("");
-    setEnergy("");
-    setDate("");
-    setNotes("");
-    calculateTrend(updatedEntries);
-  } catch (err) {
-    console.error("Failed to add wellness entry:", err);
+      setMood("");
+      setEnergy("");
+      setDate("");
+      setNotes("");
+      calculateTrend(updatedEntries);
+    } catch (err) {
+      console.error("Failed to add wellness entry:", err);
+    }
   }
-}
 
   async function handleDeleteEntry(id) {
-  try {
-    await deleteWellnessEntry(id);
+    try {
+      await fetch(`${API_URL}/wellness/${id}/`, { method: "DELETE" });
 
-    // Remove from entries list (newest first)
-    const updatedEntries = entries.filter((e) => e.id !== id);
-    setEntries(updatedEntries);
+      const updatedEntries = entries.filter((e) => e.id !== id);
+      setEntries(updatedEntries);
 
-    // Update chart (chronological)
-    const updatedChart = [...updatedEntries].sort((a, b) => new Date(a.date) - new Date(b.date));
-    setChartData(updatedChart);
+      const updatedChart = [...updatedEntries].sort(
+        (a, b) => new Date(a.date) - new Date(b.date)
+      );
+      setChartData(updatedChart);
 
-    calculateTrend(updatedEntries);
-  } catch (err) {
-    console.error("Failed to delete wellness entry:", err);
+      calculateTrend(updatedEntries);
+    } catch (err) {
+      console.error("Failed to delete wellness entry:", err);
+    }
   }
-}
 
   function calculateTrend(entries) {
     if (!entries.length) {
@@ -167,7 +176,6 @@ export default function WellnessPage() {
         </button>
       </div>
 
-      {/* Trend message */}
       {trend && (
         <div style={{ marginBottom: "1rem", fontWeight: "bold", textAlign: "center" }}>
           {trend}
@@ -201,7 +209,6 @@ export default function WellnessPage() {
         ))}
       </ul>
 
-      {/* AI Assistant */}
       <AiAssistant currentPage="wellness" />
     </div>
   );

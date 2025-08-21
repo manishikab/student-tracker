@@ -5,41 +5,45 @@ import dotenv from "dotenv";
 import db from "./db.js";
 
 dotenv.config();
+
 const app = express();
+
+// --- CORS setup ---
+const allowedOrigins = [
+  "http://localhost:5173",                  // Vite dev
+  "https://your-frontend-deployed-url.com" // replace with your deployed frontend
+];
+
+app.use(cors({
+  origin: function(origin, callback) {
+    if (!origin) return callback(null, true); // allow curl, mobile apps, etc.
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = `CORS policy: Access denied for origin ${origin}`;
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true
+}));
+
+// parse JSON
+app.use(express.json());
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+// --- Basic status route ---
 app.get("/", (req, res) => {
   res.json({ status: "ok", service: "student-coach-express" });
 });
 
-app.use(express.json());
-app.use(cors({ origin: process.env.CLIENT_URL }));
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-// Fetch last 10 messages for a user
+// --- Chat history helpers ---
 function getChatHistory(userId, limit = 10) {
   const stmt = db.prepare(
     `SELECT role, content FROM messages WHERE user_id = ? ORDER BY id DESC LIMIT ?`
   );
-  const rows = stmt.all(userId, limit);
-  return rows.reverse(); // oldest → newest
+  return stmt.all(userId, limit).reverse(); // oldest → newest
 }
 
-app.get("/history/:userId", async (req, res) => {
-  const { userId } = req.params;
-  try {
-    const rows = await db.all(
-      "SELECT role, content FROM messages WHERE userId = ? ORDER BY id ASC",
-      userId
-    );
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Could not fetch history" });
-  }
-});
-
-
-// Save a message
 function saveMessage(userId, role, content) {
   const stmt = db.prepare(
     `INSERT INTO messages (user_id, role, content) VALUES (?, ?, ?)`
@@ -47,17 +51,15 @@ function saveMessage(userId, role, content) {
   stmt.run(userId, role, content);
 }
 
+// --- Chat endpoint ---
 app.post("/chat", async (req, res) => {
   const { message, userId = "default_user", context = {}, page } = req.body;
 
   try {
-    // Save user message
     saveMessage(userId, "user", message);
 
-    // Get last 10 messages for context
     const history = getChatHistory(userId);
 
-    // Format context summary for the AI
     const contextSummary = `
       User dashboard snapshot:
       - Current page: ${page}
@@ -67,7 +69,6 @@ app.post("/chat", async (req, res) => {
       - Wellness entries: ${context.wellnessEntries?.length || 0} (latest: ${context.wellnessEntries?.[0]?.note || "N/A"})
     `;
 
-    // Call OpenAI
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -76,32 +77,29 @@ app.post("/chat", async (req, res) => {
           content: `
             You are a supportive college wellness assistant. 
             Rules:
-            - Be short (1–5 casual sentences max).
-            - Sound friendly, like a peer/friend, not a formal coach.
-            - Always ground advice in the context provided below.
-            - If the context is empty, encourage the user to log something.
-
-            Here’s the latest context:
+            - Short, friendly (1–5 sentences max)
+            - Always ground advice in the context provided
+            - Encourage logging if context is empty
+            Latest context:
             ${contextSummary}
-                      `,
-                    },
-                    ...history,
-                    { role: "user", content: message },
-                  ],
-                  temperature: 0.7,
-                });
+          `
+        },
+        ...history,
+        { role: "user", content: message }
+      ],
+      temperature: 0.7,
+    });
 
-                const aiReply = response.choices[0].message.content;
+    const aiReply = response.choices[0].message.content;
+    saveMessage(userId, "assistant", aiReply);
 
-                // Save AI reply
-                saveMessage(userId, "assistant", aiReply);
+    res.json({ reply: aiReply });
 
-                res.json({ reply: aiReply });
-              } catch (err) {
-                console.error(err);
-                res.status(500).json({ error: "AI request failed" });
-              }
-            });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "AI request failed" });
+  }
+});
 
-const PORT = process.env.PORT || 3001;          
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

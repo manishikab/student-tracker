@@ -1,30 +1,50 @@
-const BASE_URL = import.meta.env.VITE_API_URL + "/todo";
+const API_URL = import.meta.env.VITE_FASTAPI_URL;
 
 export async function getTodos() {
-  const res = await fetch(`${BASE_URL}/`);
-  return res.json();
+  try {
+    const res = await fetch(`${API_URL}/todos`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.error("Failed to fetch todos:", err);
+    return [];
+  }
 }
 
 export async function createTodo(todo) {
-  const res = await fetch(`${BASE_URL}/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(todo),
-  });
-  return res.json();
+  try {
+    const res = await fetch(`${API_URL}/todos`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(todo),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.error("Failed to create todo:", err);
+    return null;
+  }
 }
 
 export async function updateTodo(id, updatedTodo) {
-  const res = await fetch(`${BASE_URL}/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(updatedTodo),
-  });
-  return res.json();
+  try {
+    const res = await fetch(`${API_URL}/todos/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updatedTodo),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.error("Failed to update todo:", err);
+    return null;
+  }
 }
 
 export async function deleteTodo(id) {
-  await fetch(`${BASE_URL}/${id}`, {
-     method: "DELETE" 
-    });
+  try {
+    await fetch(`${API_URL}/todos/${id}`, { method: "DELETE" });
+  } catch (err) {
+    console.error("Failed to delete todo:", err);
+  }
 }
