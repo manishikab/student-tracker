@@ -1,5 +1,5 @@
 .container { 
-  background: #FFF8E8;
+  background: #FFF8E8; 
   min-height: 100vh;
   width: 100vw; 
   display: flex;
@@ -9,16 +9,22 @@
   padding: 2rem;
   box-sizing: border-box;
   font-family: 'Helvetica Neue', sans-serif;
-  color: #064232;
+  color: #064232; 
 }
-
 
 .header {
 text-align: center;
   font-size: 3rem;
   margin-bottom: 2rem;
-  color: #BB6653;
+  color: #BB6653; 
   font-weight: bold;
+}
+
+.weeklySummary {
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 1rem;
+  color: #064232; 
 }
 
 .addEntry {
@@ -61,8 +67,8 @@ text-align: center;
   cursor: pointer;
   border: none;
   border-radius: 12px;
-  background-color: #BB6653; 
-  color: #FFF8E8; 
+  background-color: #BB6653;
+  color: #FFF8E8;
   font-weight: bold;
   transition: background-color 0.2s ease, transform 0.1s ease;
 }
@@ -72,7 +78,6 @@ text-align: center;
   transform: translateY(-1px);
 }
 
-/* Wellness list */
 .entryList {
   list-style: none;
   padding: 0;
@@ -97,7 +102,6 @@ text-align: center;
   box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 }
 
-/* Section headers */
 h2 {
   text-align: center;
   color: #9d174d;

@@ -1,4 +1,3 @@
-import styles from "../ExercisePage.module.css";
 import { useState, useEffect, useContext } from "react";
 import { DashboardContext } from "../DashboardContext";
 import AiAssistant from "../components/AiAssistant.jsx";
@@ -11,18 +10,22 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import styles from "../ExercisePage.module.css";
 
 const API_URL = import.meta.env.VITE_FASTAPI_URL;
 
 export default function ExercisePage() {
   const { exerciseEntries, setExerciseEntries } = useContext(DashboardContext);
 
-  const [exercises, setExercises] = useState([]);
-  const [date, setDate] = useState("");
-  const [duration, setDuration] = useState("");
-  const [trend, setTrend] = useState(null);
+  const [entries, setEntries] = useState([]);
   const [chartData, setChartData] = useState([]);
-  const [goal, setGoal] = useState(() => Number(localStorage.getItem("exerciseGoal")) || 150); // weekly minutes
+  const [date, setDate] = useState("");
+  const [title, setTitle] = useState("");
+  const [duration, setDuration] = useState("");
+  const [intensity, setIntensity] = useState("");
+  const [notes, setNotes] = useState("");
+  const [trend, setTrend] = useState(null);
+  const [weeklyTotal, setWeeklyTotal] = useState(0);
 
   useEffect(() => {
     fetchExerciseEntries();
@@ -33,8 +36,9 @@ export default function ExercisePage() {
       const res = await fetch(`${API_URL}/exercise/`);
       const data = await res.json();
       const normalized = data.map((e) => ({ ...e, date: e.date.split("T")[0] }));
-      setExercises(normalized);
-      setExerciseEntries(normalized);
+      const newestFirst = [...normalized].sort((a, b) => new Date(b.date) - new Date(a.date));
+      setEntries(newestFirst);
+      setExerciseEntries(newestFirst);
       setChartData(aggregateByDate(normalized));
       calculateTrend(normalized);
     } catch (err) {
@@ -42,46 +46,9 @@ export default function ExercisePage() {
     }
   }
 
-  async function handleAddExercise() {
-    if (!duration || !date) return;
-    if (duration < 0) return;
-
-    try {
-      const res = await fetch(`${API_URL}/exercise/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ duration: Number(duration), date }),
-      });
-      const newEntry = await res.json();
-      const updated = [...exercises, { ...newEntry, date: newEntry.date.split("T")[0] }];
-      setExercises(updated);
-      setExerciseEntries(updated);
-      setChartData(aggregateByDate(updated));
-      calculateTrend(updated);
-      setDuration("");
-      setDate("");
-    } catch (err) {
-      console.error("Failed to add exercise entry:", err);
-      alert("Failed to save exercise entry.");
-    }
-  }
-
-  async function handleDeleteExercise(id) {
-    try {
-      await fetch(`${API_URL}/exercise/${id}/`, { method: "DELETE" });
-      const updated = exercises.filter((e) => e.id !== id);
-      setExercises(updated);
-      setExerciseEntries(updated);
-      setChartData(aggregateByDate(updated));
-      calculateTrend(updated);
-    } catch (err) {
-      console.error("Failed to delete exercise entry:", err);
-    }
-  }
-
   function aggregateByDate(entries) {
-    const grouped = entries.reduce((acc, entry) => {
-      acc[entry.date] = (acc[entry.date] || 0) + entry.duration;
+    const grouped = entries.reduce((acc, e) => {
+      acc[e.date] = (acc[e.date] || 0) + Number(e.duration || 0);
       return acc;
     }, {});
     return Object.entries(grouped)
@@ -89,9 +56,49 @@ export default function ExercisePage() {
       .sort((a, b) => new Date(a.date) - new Date(b.date));
   }
 
+  async function handleAddEntry() {
+    if (!date || !title || !duration || !intensity) return;
+    try {
+      const res = await fetch(`${API_URL}/exercise/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date, title, duration: Number(duration), intensity, notes }),
+      });
+      const created = await res.json();
+      const updatedEntries = [created, ...entries].sort((a, b) => new Date(b.date) - new Date(a.date));
+      setEntries(updatedEntries);
+      setExerciseEntries(updatedEntries);
+      setChartData(aggregateByDate(updatedEntries));
+      calculateTrend(updatedEntries);
+
+      setDate("");
+      setTitle("");
+      setDuration("");
+      setIntensity("");
+      setNotes("");
+    } catch (err) {
+      console.error("Failed to add entry:", err);
+      alert("Failed to save exercise entry.");
+    }
+  }
+
+  async function handleDeleteEntry(id) {
+    try {
+      await fetch(`${API_URL}/exercise/${id}/`, { method: "DELETE" });
+      const updatedEntries = entries.filter((e) => e.id !== id);
+      setEntries(updatedEntries);
+      setExerciseEntries(updatedEntries);
+      setChartData(aggregateByDate(updatedEntries));
+      calculateTrend(updatedEntries);
+    } catch (err) {
+      console.error("Failed to delete entry:", err);
+    }
+  }
+
   function calculateTrend(entries) {
     if (!entries.length) {
       setTrend(null);
+      setWeeklyTotal(0);
       return;
     }
     const now = new Date();
@@ -101,82 +108,60 @@ export default function ExercisePage() {
     const thisWeek = entries.filter((e) => new Date(e.date) >= oneWeekAgo);
     const lastWeek = entries.filter((e) => new Date(e.date) >= twoWeeksAgo && new Date(e.date) < oneWeekAgo);
 
-    const totalThisWeek = thisWeek.reduce((sum, e) => sum + e.duration, 0);
-    const totalLastWeek = lastWeek.reduce((sum, e) => sum + e.duration, 0);
+    const totalThisWeek = thisWeek.reduce((sum, e) => sum + Number(e.duration || 0), 0);
+    setWeeklyTotal(totalThisWeek);
 
-    if (totalThisWeek > totalLastWeek) setTrend("You exercised more this week! 💪");
-    else if (totalThisWeek < totalLastWeek) setTrend("Exercise decreased this week 😕");
+    const totalLastWeek = lastWeek.reduce((sum, e) => sum + Number(e.duration || 0), 0);
+    if (totalThisWeek > totalLastWeek) setTrend("You're exercising more this week! 💪");
+    else if (totalThisWeek < totalLastWeek) setTrend("You exercised less than last week 😅");
     else setTrend("Your exercise is about the same as last week.");
-
-  }
-
-  function handleGoalChange(e) {
-    const newGoal = Number(e.target.value);
-    setGoal(newGoal);
-    localStorage.setItem("exerciseGoal", newGoal);
   }
 
   return (
     <div className={styles.container}>
       <h1 className={styles.header}>Exercise Tracker</h1>
 
-      {/* Add Exercise */}
-      <div className={styles.addExercise}>
-        <input
-          type="number"
-          value={duration}
-          onChange={(e) => setDuration(e.target.value)}
-          placeholder="Duration (minutes)"
-          className={styles.input}
-        />
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className={styles.input}
-        />
-        <button onClick={handleAddExercise} className={styles.button}>Add</button>
+      <div className={styles.addEntry}>
+        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={styles.input} />
+        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" className={styles.input} />
+        <input type="number" value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="Duration (min)" className={styles.input} />
+        <select value={intensity} onChange={(e) => setIntensity(e.target.value)} className={styles.input}>
+          <option value="">Intensity</option>
+          <option value="Low">Low</option>
+          <option value="Medium">Medium</option>
+          <option value="High">High</option>
+        </select>
+        <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notes (optional)" className={styles.input} />
+        <div className={styles.centerButton}>
+          <button onClick={handleAddEntry} className={styles.button}>Add</button>
+        </div>
       </div>
 
-      {/* Weekly Goal */}
-      <div style={{ marginBottom: "1rem", textAlign: "center" }}>
-        <label>
-          Weekly Goal:{" "}
-          <input
-            type="number"
-            value={goal}
-            min="0"
-            onChange={handleGoalChange}
-            className={styles.input}
-            style={{ width: "80px", marginLeft: "0.5rem" }}
-          /> minutes
-        </label>
+      <div className={styles.weeklySummary}>
+        Weekly Total: {weeklyTotal} min
+        {trend && <div>{trend}</div>}
       </div>
 
-      {/* Chart */}
       <div style={{ width: "100%", maxWidth: "600px", height: "300px", marginBottom: "2rem" }}>
         <ResponsiveContainer>
           <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="date" />
-            <YAxis domain={[0, 120]} />
+            <YAxis domain={[0, 'dataMax + 10']} />
             <Tooltip />
-            <Line type="monotone" dataKey="duration" stroke="#34d399" strokeWidth={2} dot />
+            <Line type="monotone" dataKey="duration" stroke="#60a5fa" strokeWidth={2} dot />
           </LineChart>
         </ResponsiveContainer>
       </div>
 
-      {/* Trend */}
-      {trend && <div style={{ marginBottom: "1rem", fontWeight: "bold", textAlign: "center" }}>{trend}</div>}
-
-      {/* Exercise Entries */}
-      <ul className={styles.exerciseList}>
-        {exercises.map((e) => (
-          <li key={e.id} className={styles.exerciseItem}>
-            <span>
-              <strong>{e.date}</strong> — {e.duration} mins
-            </span>
-            <button onClick={() => handleDeleteExercise(e.id)} className={styles.button}>Delete</button>
+      <ul className={styles.entryList}>
+        {entries.map((e) => (
+          <li key={e.id} className={styles.entryItem}>
+            <div>
+              <strong>{e.date}</strong> — {e.title} | {e.duration} min {e.intensity && `| Intensity: ${e.intensity}`}
+            </div>
+            {e.notes && <div><strong>Notes:</strong> {e.notes}</div>}
+            <button onClick={() => handleDeleteEntry(e.id)} className={styles.button}>Delete</button>
           </li>
         ))}
       </ul>

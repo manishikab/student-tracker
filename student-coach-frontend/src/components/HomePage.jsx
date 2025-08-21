@@ -63,7 +63,7 @@ export default function HomePage() {
         <h1>Student Life, Simplified.</h1>
         <h2>Your AI-powered hub for school, health, and balance.</h2>
 
-        <div className="status-cards">
+        <div className="cards-container">
           <div className="card">
             ★ <strong>To-Do:</strong><br />
             {incompleteTodoTasks.length ? `${incompleteTodoTasks.length} tasks left` : "None!"}
