@@ -7,7 +7,8 @@ import "../CalendarPage.css";
 const API_URL = import.meta.env.VITE_FASTAPI_URL;
 
 export default function CalendarPage() {
-  const { sleepEntries: contextSleep, exerciseEntries: contextExercise, wellnessEntries: contextWellness } = useContext(DashboardContext);
+  const { sleepEntries: contextSleep, exerciseEntries: contextExercise, wellnessEntries: contextWellness } =
+    useContext(DashboardContext);
 
   const [sleepEntries, setSleepEntries] = useState([]);
   const [exerciseEntries, setExerciseEntries] = useState([]);
@@ -16,31 +17,34 @@ export default function CalendarPage() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [loading, setLoading] = useState(true);
 
-  // Fetch entries from FastAPI
+  // Initial fetch from FastAPI (only runs once on mount)
   useEffect(() => {
     async function fetchEntries() {
       try {
-        setLoading(true);
         const [sleepRes, exerciseRes, wellnessRes] = await Promise.all([
-          fetch(`${API_URL}/sleep/`).then(r => r.json()),
-          fetch(`${API_URL}/exercise/`).then(r => r.json()),
-          fetch(`${API_URL}/wellness/`).then(r => r.json()),
+          fetch(`${API_URL}/sleep/`).then((r) => r.json()),
+          fetch(`${API_URL}/exercise/`).then((r) => r.json()),
+          fetch(`${API_URL}/wellness/`).then((r) => r.json()),
         ]);
 
-        setSleepEntries(sleepRes || contextSleep || []);
-        setExerciseEntries(exerciseRes || contextExercise || []);
-        setWellnessEntries(wellnessRes || contextWellness || []);
+        setSleepEntries(sleepRes || []);
+        setExerciseEntries(exerciseRes || []);
+        setWellnessEntries(wellnessRes || []);
       } catch (err) {
         console.error("Failed to fetch entries:", err);
-        setSleepEntries(contextSleep || []);
-        setExerciseEntries(contextExercise || []);
-        setWellnessEntries(contextWellness || []);
       } finally {
-        setLoading(false);
+        setLoading(false); // only once
       }
     }
 
     fetchEntries();
+  }, []);
+
+  // Sync entries whenever DashboardContext updates (no loading flash)
+  useEffect(() => {
+    if (contextSleep) setSleepEntries(contextSleep);
+    if (contextExercise) setExerciseEntries(contextExercise);
+    if (contextWellness) setWellnessEntries(contextWellness);
   }, [contextSleep, contextExercise, contextWellness]);
 
   function parseLocalDate(d) {
@@ -88,7 +92,20 @@ export default function CalendarPage() {
     setSelectedDate(today);
   }
 
-  if (loading) return <p>Loading calendar...</p>;
+  // Show styled loading screen only during first load
+  if (loading) {
+    return (
+      <div className="calendar-page">
+        <header>Activity Calendar</header>
+        <div className="calendar-container">
+          <div className="loading-placeholder">
+            <div className="spinner"></div>
+            <p>Loading your calendar...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="calendar-page">
@@ -108,22 +125,39 @@ export default function CalendarPage() {
           {selectedDate && (
             <div className="day-summary">
               <h3>Entries for {formatDate(selectedDate)}</h3>
-              {dailyLogs.sleep.map((s, i) => <p key={i}>💤 Slept {s.hours} hrs</p>)}
-              {dailyLogs.exercise.map((x, i) => <p key={i}>💪 {x.duration} mins exercise</p>)}
-              {dailyLogs.wellness.map((w, i) => <p key={i}>🌱 Mood {w.mood}/10, Energy {w.energy}/10</p>)}
-              {dailyLogs.sleep.length + dailyLogs.exercise.length + dailyLogs.wellness.length === 0 && <p>No logs for this day.</p>}
+              {dailyLogs.sleep.map((s, i) => (
+                <p key={i}>💤 Slept {s.hours} hrs</p>
+              ))}
+              {dailyLogs.exercise.map((x, i) => (
+                <p key={i}>💪 {x.duration} mins exercise</p>
+              ))}
+              {dailyLogs.wellness.map((w, i) => (
+                <p key={i}>🌱 Mood {w.mood}/10, Energy {w.energy}/10</p>
+              ))}
+              {dailyLogs.sleep.length +
+                dailyLogs.exercise.length +
+                dailyLogs.wellness.length ===
+                0 && <p>No logs for this day.</p>}
             </div>
           )}
         </div>
 
         <div className="calendar-right">
           <div className="calendar-legend-wrapper">
-            <div className="legend-item"><span className="dot sleep"></span> Sleep</div>
-            <div className="legend-item"><span className="dot exercise"></span> Exercise</div>
-            <div className="legend-item"><span className="dot wellness"></span> Wellness</div>
+            <div className="legend-item">
+              <span className="dot sleep"></span> Sleep
+            </div>
+            <div className="legend-item">
+              <span className="dot exercise"></span> Exercise
+            </div>
+            <div className="legend-item">
+              <span className="dot wellness"></span> Wellness
+            </div>
           </div>
           <div className="jump-today-wrapper">
-            <button className="button" onClick={jumpToToday}>Jump to Today</button>
+            <button className="button" onClick={jumpToToday}>
+              Jump to Today
+            </button>
           </div>
         </div>
       </div>
