@@ -9,6 +9,7 @@ class TodoItem(Base):
     description = Column(String, nullable=True)
     category = Column(String, default="today")
     completed = Column(Boolean, default=False)
+    user_id = Column(String, index=True, nullable=False)
 
 # Sleep model
 class SleepEntry(Base):
@@ -17,6 +18,7 @@ class SleepEntry(Base):
     date = Column(Date, index=True)
     hours = Column(Float)
     notes = Column(String, nullable=True)
+    user_id = Column(String, index=True, nullable=False)
 
 # Wellness model
 class WellnessEntry(Base):
@@ -26,8 +28,9 @@ class WellnessEntry(Base):
     mood = Column(Integer)
     energy = Column(Integer)
     notes = Column(String, nullable=True)
+    user_id = Column(String, index=True, nullable=False)
 
-# Excercise Model
+# Exercise Model
 class ExerciseEntry(Base):
     __tablename__ = "exercise_entries"  
     id = Column(Integer, primary_key=True, index=True)
@@ -36,12 +39,13 @@ class ExerciseEntry(Base):
     duration = Column(Integer, nullable=False) 
     intensity = Column(String, nullable=True)  
     notes = Column(String, nullable=True)
+    user_id = Column(String, nullable=False)
 
-# Homepage
+# Homepage Goals
 class Goal(Base):
     __tablename__ = "goals"
-
     id = Column(Integer, primary_key=True, index=True)
     text = Column(String, nullable=False)
     done = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    user_id = Column(String, nullable=False)

@@ -1,10 +1,14 @@
 import React, { createContext, useState, useEffect } from "react";
+import { initializeApp } from "firebase/app";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+
+// Your existing API functions
 import { getTodos } from "./api/todoApi";
 import { getExerciseEntries } from "./api/exerciseApi";
 import { getSleepEntries } from "./api/sleepApi";
 import { getWellnessEntries } from "./api/wellnessAPI";
 
-// helper: normalize JS Date → YYYY-MM-DD in local time
+// Helper: normalize JS Date → YYYY-MM-DD in local time
 const toLocalDate = (d) => {
   const dt = new Date(d);
   dt.setMinutes(dt.getMinutes() - dt.getTimezoneOffset());
@@ -13,37 +17,81 @@ const toLocalDate = (d) => {
 
 export const DashboardContext = createContext();
 
+// Initialize Firebase
+const firebaseConfig = {
+  apiKey: "YOUR_FIREBASE_API_KEY",
+  authDomain: "YOUR_FIREBASE_AUTH_DOMAIN",
+  projectId: "YOUR_FIREBASE_PROJECT_ID",
+  // ...other config
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
 export function DashboardProvider({ children }) {
+  // Auth state
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
+
+  // Dashboard state
   const [todoTasks, setTodoTasks] = useState([]);
   const [exerciseEntries, setExerciseEntries] = useState([]);
   const [sleepEntries, setSleepEntries] = useState([]);
   const [wellnessEntries, setWellnessEntries] = useState([]);
-
   const [wellnessStatus, setWellnessStatus] = useState(0);
 
-  // fetch on mount
+  // Listen for Firebase auth state changes
   useEffect(() => {
-  async function fetchAll() {
-    try {
-      const todos = await getTodos();
-      setTodoTasks(todos);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        setUser(firebaseUser);
+        const idToken = await firebaseUser.getIdToken();
+        setToken(idToken);
+      } else {
+        setUser(null);
+        setToken(null);
+      }
+    });
 
-      const exercise = await getExerciseEntries();
-      setExerciseEntries(exercise);
+    return () => unsubscribe();
+  }, []);
 
-      const sleep = await getSleepEntries();
-      setSleepEntries(sleep);
+  // Helper: fetch API with auth token
+  const authFetch = async (url, options = {}) => {
+    const headers = {
+      ...options.headers,
+      Authorization: token ? `Bearer ${token}` : "",
+      "Content-Type": "application/json",
+    };
+    const res = await fetch(url, { ...options, headers });
+    return res.json();
+  };
 
-      const wellness = await getWellnessEntries();
-      setWellnessEntries(wellness);
-    } catch (err) {
-      console.error("Failed to fetch dashboard data:", err);
+  // Fetch dashboard data
+  useEffect(() => {
+    if (!user) return; // only fetch when logged in
+
+    async function fetchAll() {
+      try {
+        const todos = await getTodos(authFetch);
+        setTodoTasks(todos);
+
+        const exercise = await getExerciseEntries(authFetch);
+        setExerciseEntries(exercise);
+
+        const sleep = await getSleepEntries(authFetch);
+        setSleepEntries(sleep);
+
+        const wellness = await getWellnessEntries(authFetch);
+        setWellnessEntries(wellness);
+      } catch (err) {
+        console.error("Failed to fetch dashboard data:", err);
+      }
     }
-  }
-  fetchAll();
-}, []);
 
-  // derived snapshots
+    fetchAll();
+  }, [user, token]);
+
+  // Derived snapshots
   const today = toLocalDate(new Date());
   const yesterday = (() => {
     const d = new Date();
@@ -51,25 +99,25 @@ export function DashboardProvider({ children }) {
     return toLocalDate(d);
   })();
 
-  // exercise minutes today
   const todayExerciseMinutes = exerciseEntries
-  .filter((e) => e.date === today)
-  .reduce((sum, e) => sum + (e.duration || 0), 0);
+    .filter((e) => e.date === today)
+    .reduce((sum, e) => sum + (e.duration || 0), 0);
   const todayExercise = exerciseEntries.filter((e) => e.date === today);
 
-  // sleep hours last night
   const lastNightSleep = sleepEntries.find((s) => s.date === yesterday) || null;
   const lastNightSleepHours = lastNightSleep ? lastNightSleep.hours : 0;
 
-  // wellness entry today
   const todayWellness = wellnessEntries.find((w) => w.date === today) || null;
-
-  const incompleteTodoTasks = todoTasks.filter(task => !task.completed);
+  const incompleteTodoTasks = todoTasks.filter((task) => !task.completed);
 
   return (
     <DashboardContext.Provider
       value={{
-        // raw
+        user,
+        token,
+        authFetch,
+
+        // raw data
         todoTasks,
         setTodoTasks,
         exerciseEntries,
