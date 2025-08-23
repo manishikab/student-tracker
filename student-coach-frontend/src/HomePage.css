@@ -66,6 +66,18 @@ h2{
   font-weight: 500;
 }
 
+.goal-box li button {
+  margin-left: 10px; 
+  padding: 5px 10px;
+  border: none;
+  border-radius: 8px;
+  background: #BB6653;
+  color: #FFF8E8;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.2s ease;
+}
+
 .goal-input {
   display: flex;
   gap: 10px;
