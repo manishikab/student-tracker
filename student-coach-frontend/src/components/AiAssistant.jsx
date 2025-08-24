@@ -2,8 +2,10 @@ import { useContext, useState, useEffect } from "react";
 import { DashboardContext } from "../DashboardContext";
 import styles from "../AIAssistant.module.css";
 import { EXPRESS_URL } from "../config.js";
+import { useAuth } from "../App";
 
 export default function AiAssistant({ currentPage }) {
+  const token = useAuth();
   const { 
     todoTasks, 
     sleepEntries, 
@@ -22,9 +24,11 @@ export default function AiAssistant({ currentPage }) {
   // Fetch a tip when chat first opens
   useEffect(() => {
     if (open && chat.length === 0) fetchTip();
-  }, [open]);
+  }, [open, token]); // wait for token
 
   const fetchTip = async () => {
+    if (!token) return;
+
     setLoading(true);
     setChat([{ role: "assistant", content: "Thinking..." }]);
 
@@ -44,10 +48,12 @@ export default function AiAssistant({ currentPage }) {
     try {
       const res = await fetch(`${EXPRESS_URL}/chat`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
         body: JSON.stringify({
           message: promptMessage,
-          userId: "default_user",
           page: currentPage,
           context: { todoTasks, sleepEntries, wellnessEntries, exerciseEntries, todayExerciseMinutes, todayWellness }
         })
@@ -64,7 +70,7 @@ export default function AiAssistant({ currentPage }) {
   };
 
   const sendMessage = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || !token) return;
 
     const userMessage = input.trim();
     setChat(prev => [...prev, { role: "user", content: userMessage }]);
@@ -86,10 +92,12 @@ export default function AiAssistant({ currentPage }) {
     try {
       const res = await fetch(`${EXPRESS_URL}/chat`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
         body: JSON.stringify({
           message: promptMessage,
-          userId: "default_user",
           page: currentPage,
           context: { todoTasks, sleepEntries, wellnessEntries, exerciseEntries, todayExerciseMinutes, todayWellness }
         })

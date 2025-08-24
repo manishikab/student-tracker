@@ -11,11 +11,13 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import styles from "../ExercisePage.module.css";
+import { useAuth } from "../App"; // Firebase ID token
 
 const API_URL = import.meta.env.VITE_FASTAPI_URL;
 
 export default function ExercisePage() {
   const { exerciseEntries, setExerciseEntries } = useContext(DashboardContext);
+  const token = useAuth(); // Firebase ID token
 
   const [entries, setEntries] = useState([]);
   const [chartData, setChartData] = useState([]);
@@ -28,12 +30,15 @@ export default function ExercisePage() {
   const [weeklyTotal, setWeeklyTotal] = useState(0);
 
   useEffect(() => {
-    fetchExerciseEntries();
-  }, []);
+    if (token) fetchExerciseEntries();
+  }, [token]);
 
   async function fetchExerciseEntries() {
     try {
-      const res = await fetch(`${API_URL}/exercise/`);
+      const res = await fetch(`${API_URL}/exercise/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to fetch exercise entries");
       const data = await res.json();
       const normalized = data.map((e) => ({ ...e, date: e.date.split("T")[0] }));
       const newestFirst = [...normalized].sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -42,7 +47,7 @@ export default function ExercisePage() {
       setChartData(aggregateByDate(normalized));
       calculateTrend(normalized);
     } catch (err) {
-      console.error("Failed to fetch exercise entries:", err);
+      console.error(err);
     }
   }
 
@@ -58,12 +63,17 @@ export default function ExercisePage() {
 
   async function handleAddEntry() {
     if (!date || !title || !duration || !intensity) return;
+
     try {
       const res = await fetch(`${API_URL}/exercise/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}` 
+        },
         body: JSON.stringify({ date, title, duration: Number(duration), intensity, notes }),
       });
+      if (!res.ok) throw new Error("Failed to add exercise entry");
       const created = await res.json();
       const updatedEntries = [created, ...entries].sort((a, b) => new Date(b.date) - new Date(a.date));
       setEntries(updatedEntries);
@@ -77,21 +87,24 @@ export default function ExercisePage() {
       setIntensity("");
       setNotes("");
     } catch (err) {
-      console.error("Failed to add entry:", err);
+      console.error(err);
       alert("Failed to save exercise entry.");
     }
   }
 
   async function handleDeleteEntry(id) {
     try {
-      await fetch(`${API_URL}/exercise/${id}/`, { method: "DELETE" });
+      await fetch(`${API_URL}/exercise/${id}/`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const updatedEntries = entries.filter((e) => e.id !== id);
       setEntries(updatedEntries);
       setExerciseEntries(updatedEntries);
       setChartData(aggregateByDate(updatedEntries));
       calculateTrend(updatedEntries);
     } catch (err) {
-      console.error("Failed to delete entry:", err);
+      console.error(err);
     }
   }
 

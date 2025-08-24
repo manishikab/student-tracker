@@ -11,11 +11,13 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { useAuth } from "../App"; // custom hook from App.jsx
 
 const API_URL = import.meta.env.VITE_FASTAPI_URL;
 
 export default function SleepPage() {
   const { sleepEntries, setSleepEntries } = useContext(DashboardContext);
+  const token = useAuth(); // Firebase ID token
 
   const [sleeps, setSleeps] = useState([]);
   const [hours, setHours] = useState("");
@@ -26,13 +28,18 @@ export default function SleepPage() {
   const [chartData, setChartData] = useState([]);
 
   useEffect(() => {
-    fetchSleepEntries();
-    fetchSleepAverage();
-  }, []);
+    if (token) {
+      fetchSleepEntries();
+      fetchSleepAverage();
+    }
+  }, [token]);
 
   async function fetchSleepEntries() {
     try {
-      const res = await fetch(`${API_URL}/sleep/`);
+      const res = await fetch(`${API_URL}/sleep/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to fetch sleep entries");
       const data = await res.json();
       const normalized = data.map((s) => ({ ...s, date: s.date.split("T")[0] }));
       setSleeps(normalized);
@@ -40,17 +47,20 @@ export default function SleepPage() {
       setChartData(aggregateByDate(normalized));
       calculateTrend(normalized);
     } catch (err) {
-      console.error("Failed to fetch sleep entries:", err);
+      console.error(err);
     }
   }
 
   async function fetchSleepAverage() {
     try {
-      const res = await fetch(`${API_URL}/sleep/average/`);
+      const res = await fetch(`${API_URL}/sleep/average/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to fetch sleep average");
       const avg = await res.json();
       setAverage(avg);
     } catch (err) {
-      console.error("Failed to fetch sleep average:", err);
+      console.error(err);
     }
   }
 
@@ -61,9 +71,13 @@ export default function SleepPage() {
     try {
       const res = await fetch(`${API_URL}/sleep/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
         body: JSON.stringify({ hours: Number(hours), date }),
       });
+      if (!res.ok) throw new Error("Failed to add sleep entry");
       const newEntry = await res.json();
       const updated = [...sleeps, { ...newEntry, date: newEntry.date.split("T")[0] }];
       setSleeps(updated);
@@ -74,14 +88,17 @@ export default function SleepPage() {
       setDate("");
       fetchSleepAverage();
     } catch (err) {
-      console.error("Failed to add sleep entry:", err);
+      console.error(err);
       alert("Failed to save sleep entry.");
     }
   }
 
   async function handleDeleteSleep(id) {
     try {
-      await fetch(`${API_URL}/sleep/${id}/`, { method: "DELETE" });
+      await fetch(`${API_URL}/sleep/${id}/`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const updated = sleeps.filter((s) => s.id !== id);
       setSleeps(updated);
       setSleepEntries(updated);
@@ -89,7 +106,7 @@ export default function SleepPage() {
       calculateTrend(updated);
       fetchSleepAverage();
     } catch (err) {
-      console.error("Failed to delete sleep entry:", err);
+      console.error(err);
     }
   }
 

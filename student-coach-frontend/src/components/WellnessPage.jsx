@@ -11,12 +11,13 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { useAuth } from "../App"; // custom hook from App.jsx
 
-// Use deployed FastAPI URL from env
 const API_URL = import.meta.env.VITE_FASTAPI_URL;
 
 export default function WellnessPage() {
   const { wellnessStatus, setWellnessStatus } = useContext(DashboardContext);
+  const token = useAuth(); // get Firebase ID token
 
   const [entries, setEntries] = useState([]);
   const [chartData, setChartData] = useState([]);
@@ -27,25 +28,26 @@ export default function WellnessPage() {
   const [trend, setTrend] = useState(null);
 
   useEffect(() => {
-    fetchEntries();
-  }, []);
+    if (token) fetchEntries(); // fetch only if token exists
+  }, [token]);
 
   async function fetchEntries() {
     try {
-      const res = await fetch(`${API_URL}/wellness/`);
+      const res = await fetch(`${API_URL}/wellness/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to fetch wellness entries");
       const data = await res.json();
 
-      // Entries list: newest first
       const newestFirst = [...data].sort((a, b) => new Date(b.date) - new Date(a.date));
       setEntries(newestFirst);
 
-      // Chart: oldest first
       const chronological = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
       setChartData(chronological);
 
       calculateTrend(newestFirst);
     } catch (err) {
-      console.error("Failed to fetch wellness entries:", err);
+      console.error(err);
     }
   }
 
@@ -58,9 +60,13 @@ export default function WellnessPage() {
     try {
       const res = await fetch(`${API_URL}/wellness/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ date, mood: moodVal, energy: energyVal, notes: notes || null }),
       });
+      if (!res.ok) throw new Error("Failed to add wellness entry");
       const created = await res.json();
 
       const updatedEntries = [created, ...entries].sort(
@@ -79,13 +85,16 @@ export default function WellnessPage() {
       setNotes("");
       calculateTrend(updatedEntries);
     } catch (err) {
-      console.error("Failed to add wellness entry:", err);
+      console.error(err);
     }
   }
 
   async function handleDeleteEntry(id) {
     try {
-      await fetch(`${API_URL}/wellness/${id}/`, { method: "DELETE" });
+      await fetch(`${API_URL}/wellness/${id}/`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       const updatedEntries = entries.filter((e) => e.id !== id);
       setEntries(updatedEntries);
@@ -97,7 +106,7 @@ export default function WellnessPage() {
 
       calculateTrend(updatedEntries);
     } catch (err) {
-      console.error("Failed to delete wellness entry:", err);
+      console.error(err);
     }
   }
 

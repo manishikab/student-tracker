@@ -3,48 +3,61 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { DashboardContext } from "../DashboardContext";
 import "../CalendarPage.css";
+import { useAuth } from "../App";
 
 const API_URL = import.meta.env.VITE_FASTAPI_URL;
 
 export default function CalendarPage() {
-  const { sleepEntries: contextSleep, exerciseEntries: contextExercise, wellnessEntries: contextWellness } =
+  const { sleepEntries: contextSleep, exerciseEntries: contextExercise, wellnessEntries: contextWellness, setSleepEntries, setExerciseEntries, setWellnessEntries } =
     useContext(DashboardContext);
 
-  const [sleepEntries, setSleepEntries] = useState([]);
-  const [exerciseEntries, setExerciseEntries] = useState([]);
-  const [wellnessEntries, setWellnessEntries] = useState([]);
+  const token = useAuth();
+
+  const [sleepEntries, setLocalSleepEntries] = useState([]);
+  const [exerciseEntries, setLocalExerciseEntries] = useState([]);
+  const [wellnessEntries, setLocalWellnessEntries] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [loading, setLoading] = useState(true);
 
-  // Initial fetch from FastAPI (only runs once on mount)
+  // Initial fetch from FastAPI after token is ready
   useEffect(() => {
+    if (!token) return;
+
     async function fetchEntries() {
       try {
         const [sleepRes, exerciseRes, wellnessRes] = await Promise.all([
-          fetch(`${API_URL}/sleep/`).then((r) => r.json()),
-          fetch(`${API_URL}/exercise/`).then((r) => r.json()),
-          fetch(`${API_URL}/wellness/`).then((r) => r.json()),
+          fetch(`${API_URL}/sleep/`, { headers: { Authorization: `Bearer ${token}` } }).then((r) => r.json()),
+          fetch(`${API_URL}/exercise/`, { headers: { Authorization: `Bearer ${token}` } }).then((r) => r.json()),
+          fetch(`${API_URL}/wellness/`, { headers: { Authorization: `Bearer ${token}` } }).then((r) => r.json()),
         ]);
 
-        setSleepEntries(sleepRes || []);
-        setExerciseEntries(exerciseRes || []);
-        setWellnessEntries(wellnessRes || []);
+        const normalizedSleep = sleepRes.map((s) => ({ ...s, date: s.date.split("T")[0] }));
+        const normalizedExercise = exerciseRes.map((e) => ({ ...e, date: e.date.split("T")[0] }));
+        const normalizedWellness = wellnessRes.map((w) => ({ ...w, date: w.date.split("T")[0] }));
+
+        setLocalSleepEntries(normalizedSleep);
+        setLocalExerciseEntries(normalizedExercise);
+        setLocalWellnessEntries(normalizedWellness);
+
+        setSleepEntries(normalizedSleep);
+        setExerciseEntries(normalizedExercise);
+        setWellnessEntries(normalizedWellness);
       } catch (err) {
         console.error("Failed to fetch entries:", err);
       } finally {
-        setLoading(false); // only once
+        setLoading(false);
       }
     }
 
     fetchEntries();
-  }, []);
+  }, [token, setSleepEntries, setExerciseEntries, setWellnessEntries]);
 
-  // Sync entries whenever DashboardContext updates (no loading flash)
+  // Sync local entries with context updates
   useEffect(() => {
-    if (contextSleep) setSleepEntries(contextSleep);
-    if (contextExercise) setExerciseEntries(contextExercise);
-    if (contextWellness) setWellnessEntries(contextWellness);
+    if (contextSleep) setLocalSleepEntries(contextSleep);
+    if (contextExercise) setLocalExerciseEntries(contextExercise);
+    if (contextWellness) setLocalWellnessEntries(contextWellness);
   }, [contextSleep, contextExercise, contextWellness]);
 
   function parseLocalDate(d) {
@@ -92,7 +105,6 @@ export default function CalendarPage() {
     setSelectedDate(today);
   }
 
-  // Show styled loading screen only during first load
   if (loading) {
     return (
       <div className="calendar-page">

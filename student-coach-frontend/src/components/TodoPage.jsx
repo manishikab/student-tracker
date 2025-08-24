@@ -2,24 +2,28 @@ import styles from "../TodoPage.module.css";
 import React, { useState, useEffect, useContext } from "react";
 import { DashboardContext } from "../DashboardContext";
 import AiAssistant from "../components/AiAssistant.jsx";
+import { useAuth } from "../App"; // custom hook from App.jsx
 
-// Use deployed FastAPI URL from env
 const API_URL = import.meta.env.VITE_FASTAPI_URL;
 
 export default function TodoPage() {
   const { todoTasks, setTodoTasks } = useContext(DashboardContext);
+  const token = useAuth(); // get Firebase ID token from context
 
   const [todos, setTodos] = useState([]);
   const [newTodo, setNewTodo] = useState("");
   const [category, setCategory] = useState("upcoming");
 
   useEffect(() => {
-    fetchTodos();
-  }, []);
+    if (token) fetchTodos(); // only fetch if token exists
+  }, [token]);
 
   async function fetchTodos() {
     try {
-      const res = await fetch(`${API_URL}/todos/`);
+      const res = await fetch(`${API_URL}/todos/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to fetch todos");
       const data = await res.json();
       setTodos(data);
       setTodoTasks(data);
@@ -33,9 +37,13 @@ export default function TodoPage() {
     try {
       const res = await fetch(`${API_URL}/todos/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ title: newTodo, completed: false, category }),
       });
+      if (!res.ok) throw new Error("Failed to create todo");
       const created = await res.json();
       const updatedTodos = [...todos, created];
       setTodos(updatedTodos);
@@ -43,7 +51,7 @@ export default function TodoPage() {
       setNewTodo("");
       setCategory("today");
     } catch (err) {
-      console.error("Failed to create todo:", err);
+      console.error(err);
     }
   }
 
@@ -51,26 +59,33 @@ export default function TodoPage() {
     try {
       const res = await fetch(`${API_URL}/todos/${todo.id}/`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ ...todo, completed: !todo.completed }),
       });
+      if (!res.ok) throw new Error("Failed to update todo");
       const updated = await res.json();
       const updatedTodos = todos.map((t) => (t.id === todo.id ? updated : t));
       setTodos(updatedTodos);
       setTodoTasks(updatedTodos);
     } catch (err) {
-      console.error("Failed to update todo:", err);
+      console.error(err);
     }
   }
 
   async function handleDelete(todoId) {
     try {
-      await fetch(`${API_URL}/todos/${todoId}/`, { method: "DELETE" });
+      await fetch(`${API_URL}/todos/${todoId}/`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const updatedTodos = todos.filter((t) => t.id !== todoId);
       setTodos(updatedTodos);
       setTodoTasks(updatedTodos);
     } catch (err) {
-      console.error("Failed to delete todo:", err);
+      console.error(err);
     }
   }
 

@@ -1,9 +1,11 @@
 import React, { useState, useContext } from 'react';
 import { DashboardContext } from '../DashboardContext';
+import { useAuth } from '../App';
 import '../Chatbox.css';
 import { EXPRESS_URL } from '../config.js';
 
 export default function ChatBox({ currentPage }) {
+  const token = useAuth();
   const {
     todoTasks,
     sleepEntries,
@@ -19,7 +21,7 @@ export default function ChatBox({ currentPage }) {
   const [loading, setLoading] = useState(false);
 
   const sendMessage = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || !token) return;
 
     const userMessage = input.trim();
     setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
@@ -42,10 +44,12 @@ export default function ChatBox({ currentPage }) {
     try {
       const res = await fetch(`${EXPRESS_URL}/chat`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}` // attach user token
+        },
         body: JSON.stringify({
           message: promptMessage,
-          userId: 'default_user',
           page: currentPage,
           context: { todoTasks, sleepEntries, wellnessEntries, exerciseEntries, todayExerciseMinutes, todayWellness }
         }),

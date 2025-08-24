@@ -2,33 +2,49 @@ import React, { useState, useContext, useEffect } from "react";
 import ChatBox from "./ChatBox";
 import "../HomePage.css";
 import { DashboardContext } from "../DashboardContext";
-import { getGoals, addGoal as apiAddGoal, updateGoal, deleteGoal as apiDeleteGoal } from "../api/goalsApi";
+import { useAuth } from "../App";
+
+const API_URL = import.meta.env.VITE_FASTAPI_URL;
 
 export default function HomePage() {
+  const token = useAuth();
   const [goals, setGoals] = useState([]);
   const [goalInput, setGoalInput] = useState("");
 
   const { incompleteTodoTasks, todayExerciseMinutes, lastNightSleepHours, todayWellness } =
     useContext(DashboardContext);
 
+  // Fetch goals once token is ready
   useEffect(() => {
-  async function fetchGoals() {
-    try {
-      const data = await getGoals();
-      setGoals(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error("Failed to fetch goals:", err);
-      setGoals([]); // fallback to empty array
-    }
-  }
-  fetchGoals();
-}, []);
+    if (!token) return;
 
+    async function fetchGoals() {
+      try {
+        const res = await fetch(`${API_URL}/goals/`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        setGoals(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Failed to fetch goals:", err);
+        setGoals([]);
+      }
+    }
+    fetchGoals();
+  }, [token]);
 
   const addGoal = async () => {
-    if (!goalInput.trim()) return;
+    if (!goalInput.trim() || !token) return;
     try {
-      const newGoal = await apiAddGoal({ text: goalInput.trim(), done: false });
+      const res = await fetch(`${API_URL}/goals/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ text: goalInput.trim(), done: false }),
+      });
+      const newGoal = await res.json();
       setGoals([newGoal, ...goals]);
       setGoalInput("");
     } catch (err) {
@@ -37,9 +53,18 @@ export default function HomePage() {
   };
 
   const toggleGoal = async (index) => {
+    if (!token) return;
     const goal = goals[index];
     try {
-      const updated = await updateGoal(goal.id, { ...goal, done: !goal.done });
+      const res = await fetch(`${API_URL}/goals/${goal.id}/`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ ...goal, done: !goal.done }),
+      });
+      const updated = await res.json();
       const newGoals = [...goals];
       newGoals[index] = updated;
       setGoals(newGoals);
@@ -49,8 +74,12 @@ export default function HomePage() {
   };
 
   const deleteGoal = async (id) => {
+    if (!token) return;
     try {
-      await apiDeleteGoal(id);
+      await fetch(`${API_URL}/goals/${id}/`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setGoals(goals.filter((g) => g.id !== id));
     } catch (err) {
       console.error("Failed to delete goal:", err);
