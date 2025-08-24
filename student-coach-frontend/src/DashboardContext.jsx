@@ -24,8 +24,8 @@ const firebaseConfig = {
   projectId: "YOUR_FIREBASE_PROJECT_ID",
   // ...other config
 };
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+
+import { auth } from "./firebase.js";
 
 export function DashboardProvider({ children }) {
   // Auth state
