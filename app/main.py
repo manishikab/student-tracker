@@ -30,11 +30,11 @@ app.add_middleware(
 )
 
 # Include all routers
-app.include_router(todo_routes.router, prefix="/todos")
-app.include_router(sleep_routes.router, prefix="/sleep")
-app.include_router(wellness_routes.router, prefix="/wellness")
-app.include_router(exercise_routes.router, prefix="/exercise")
-app.include_router(goals.router, prefix="/goals")
+app.include_router(todo_routes.router)
+app.include_router(exercise_routes.router)
+app.include_router(sleep_routes.router)
+app.include_router(wellness_routes.router)
+app.include_router(goals_routes.router)
 
 @app.get("/test-cors")
 def test_cors():
