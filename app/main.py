@@ -7,34 +7,35 @@ from app.routes import todo_routes, sleep_routes, wellness_routes, exercise_rout
 
 load_dotenv()
 
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
-
-app = FastAPI()
-
-@app.get("/")
-def root():
-    return {"status": "ok", "service": "student-coach-fastapi"}
-
-
-origins = [
+# Frontend origins
+FRONTEND_URLS = [
     "http://localhost:5173",
     "https://ai-student-coach-frontend.onrender.com",
 ]
 
+app = FastAPI()
+
+# Simple health check
+@app.get("/")
+def root():
+    return {"status": "ok", "service": "student-coach-fastapi"}
+
+# CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=FRONTEND_URLS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.include_router(todo_routes.router)
-app.include_router(sleep_routes.router)
-app.include_router(wellness_routes.router)
-app.include_router(exercise_routes.router)
-app.include_router(goals.router)
+# Include all routers
+app.include_router(todo_routes.router, prefix="/todos")
+app.include_router(sleep_routes.router, prefix="/sleep")
+app.include_router(wellness_routes.router, prefix="/wellness")
+app.include_router(exercise_routes.router, prefix="/exercise")
+app.include_router(goals.router, prefix="/goals")
 
 @app.get("/test-cors")
 def test_cors():
-    return {"message": "CORS should work"}
+    return {"message": "CORS is working!"}

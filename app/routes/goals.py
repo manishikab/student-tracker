@@ -1,24 +1,24 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app import models, schemas, database
-from app.auth import get_current_user  # <-- import current user dependency
+from app.dependencies import verify_token  # Firebase auth dependency
 
 router = APIRouter(prefix="/goals", tags=["Goals"])
 
 # Get goals for current user
 @router.get("/", response_model=list[schemas.Goal])
-def get_goals(db: Session = Depends(database.get_db), user=Depends(get_current_user)):
+def get_goals(db: Session = Depends(database.get_db), user: dict = Depends(verify_token)):
     return (
         db.query(models.Goal)
-        .filter(models.Goal.user_id == user["uid"])  # <-- filter by user
+        .filter(models.Goal.user_id == user["uid"])
         .order_by(models.Goal.created_at.desc())
         .all()
     )
 
 # Create a goal for current user
 @router.post("/", response_model=schemas.Goal)
-def create_goal(goal: schemas.GoalCreate, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
-    new_goal = models.Goal(**goal.dict(), user_id=user["uid"])  # <-- associate with user
+def create_goal(goal: schemas.GoalCreate, db: Session = Depends(database.get_db), user: dict = Depends(verify_token)):
+    new_goal = models.Goal(**goal.dict(), user_id=user["uid"])
     db.add(new_goal)
     db.commit()
     db.refresh(new_goal)
@@ -26,7 +26,7 @@ def create_goal(goal: schemas.GoalCreate, db: Session = Depends(database.get_db)
 
 # Update a goal (only if it belongs to the current user)
 @router.put("/{goal_id}", response_model=schemas.Goal)
-def update_goal(goal_id: int, goal: schemas.GoalBase, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
+def update_goal(goal_id: int, goal: schemas.GoalBase, db: Session = Depends(database.get_db), user: dict = Depends(verify_token)):
     db_goal = (
         db.query(models.Goal)
         .filter(models.Goal.id == goal_id, models.Goal.user_id == user["uid"])
@@ -42,7 +42,7 @@ def update_goal(goal_id: int, goal: schemas.GoalBase, db: Session = Depends(data
 
 # Delete a goal (only if it belongs to the current user)
 @router.delete("/{goal_id}")
-def delete_goal(goal_id: int, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
+def delete_goal(goal_id: int, db: Session = Depends(database.get_db), user: dict = Depends(verify_token)):
     db_goal = (
         db.query(models.Goal)
         .filter(models.Goal.id == goal_id, models.Goal.user_id == user["uid"])

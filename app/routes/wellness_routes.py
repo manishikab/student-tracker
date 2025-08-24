@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app import models, schemas, database
-from app.auth import get_current_user  # assuming you have an auth dependency
+from app.dependencies import verify_token  # our Firebase auth dependency
 
 router = APIRouter(prefix="/wellness", tags=["wellness"])
 
@@ -10,7 +10,7 @@ router = APIRouter(prefix="/wellness", tags=["wellness"])
 def log_wellness(
     entry: schemas.WellnessEntryCreate,
     db: Session = Depends(database.get_db),
-    user: dict = Depends(get_current_user),
+    user: dict = Depends(verify_token),  # Firebase user info
 ):
     db_entry = models.WellnessEntry(**entry.model_dump(), user_id=user["uid"])
     db.add(db_entry)
@@ -22,7 +22,7 @@ def log_wellness(
 @router.get("/", response_model=list[schemas.WellnessEntry])
 def get_wellness_entries(
     db: Session = Depends(database.get_db),
-    user: dict = Depends(get_current_user),
+    user: dict = Depends(verify_token),
 ):
     return (
         db.query(models.WellnessEntry)
@@ -36,7 +36,7 @@ def get_wellness_entries(
 def delete_wellness_entry(
     wellness_id: int,
     db: Session = Depends(database.get_db),
-    user: dict = Depends(get_current_user),
+    user: dict = Depends(verify_token),
 ):
     entry = (
         db.query(models.WellnessEntry)

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app import models, schemas, database
-from app.auth import get_current_user  # <-- import the Firebase auth dependency
+from app.dependencies import verify_token  # Firebase auth dependency
 
 router = APIRouter(prefix="/exercise", tags=["exercise"])
 
@@ -10,9 +10,9 @@ router = APIRouter(prefix="/exercise", tags=["exercise"])
 def log_exercise(
     entry: schemas.ExerciseEntryCreate,
     db: Session = Depends(database.get_db),
-    user=Depends(get_current_user),  # <-- add current user
+    user: dict = Depends(verify_token),
 ):
-    db_entry = models.ExerciseEntry(**entry.model_dump(), user_id=user["uid"])  # <-- associate with user
+    db_entry = models.ExerciseEntry(**entry.model_dump(), user_id=user["uid"])
     db.add(db_entry)
     db.commit()
     db.refresh(db_entry)
@@ -22,11 +22,11 @@ def log_exercise(
 @router.get("/", response_model=list[schemas.ExerciseEntry])
 def get_exercise_entries(
     db: Session = Depends(database.get_db),
-    user=Depends(get_current_user),  # <-- add current user
+    user: dict = Depends(verify_token),
 ):
     return (
         db.query(models.ExerciseEntry)
-        .filter(models.ExerciseEntry.user_id == user["uid"])  # <-- filter by user
+        .filter(models.ExerciseEntry.user_id == user["uid"])
         .order_by(models.ExerciseEntry.date.desc())
         .all()
     )
@@ -36,14 +36,11 @@ def get_exercise_entries(
 def delete_exercise_entry(
     exercise_id: int,
     db: Session = Depends(database.get_db),
-    user=Depends(get_current_user),  # <-- add current user
+    user: dict = Depends(verify_token),
 ):
     entry = (
         db.query(models.ExerciseEntry)
-        .filter(
-            models.ExerciseEntry.id == exercise_id,
-            models.ExerciseEntry.user_id == user["uid"],  # <-- ensure user owns it
-        )
+        .filter(models.ExerciseEntry.id == exercise_id, models.ExerciseEntry.user_id == user["uid"])
         .first()
     )
     if not entry:
