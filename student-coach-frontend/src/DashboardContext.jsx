@@ -1,8 +1,7 @@
 import React, { createContext, useState, useEffect } from "react";
-import { initializeApp } from "firebase/app";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "./firebase.js"; // ONLY import auth here
 
-// Your existing API functions
 import { getTodos } from "./api/todoApi";
 import { getExerciseEntries } from "./api/exerciseApi";
 import { getSleepEntries } from "./api/sleepApi";
