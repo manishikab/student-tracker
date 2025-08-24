@@ -1,126 +1,69 @@
-import React, { createContext, useState, useEffect } from "react";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "./firebase.js"; // only once
+import React, { useState } from "react";
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword 
+} from "firebase/auth";
+import { auth } from "../firebase";
 
-import { getTodos } from "./api/todoApi";
-import { getExerciseEntries } from "./api/exerciseApi";
-import { getSleepEntries } from "./api/sleepApi";
-import { getWellnessEntries } from "./api/wellnessAPI";
+export default function Login({ onLogin }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [error, setError] = useState("");
 
-// Helper: normalize JS Date → YYYY-MM-DD in local time
-const toLocalDate = (d) => {
-  const dt = new Date(d);
-  dt.setMinutes(dt.getMinutes() - dt.getTimezoneOffset());
-  return dt.toISOString().split("T")[0];
-};
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
 
-export const DashboardContext = createContext();
-
-export function DashboardProvider({ children }) {
-  // Auth state
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
-
-  // Dashboard state
-  const [todoTasks, setTodoTasks] = useState([]);
-  const [exerciseEntries, setExerciseEntries] = useState([]);
-  const [sleepEntries, setSleepEntries] = useState([]);
-  const [wellnessEntries, setWellnessEntries] = useState([]);
-  const [wellnessStatus, setWellnessStatus] = useState(0);
-
-  // Listen for Firebase auth state changes
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        setUser(firebaseUser);
-        const idToken = await firebaseUser.getIdToken();
-        setToken(idToken);
+    try {
+      let userCred;
+      if (isSignUp) {
+        // Sign up new user
+        userCred = await createUserWithEmailAndPassword(auth, email, password);
       } else {
-        setUser(null);
-        setToken(null);
+        // Login existing user
+        userCred = await signInWithEmailAndPassword(auth, email, password);
       }
-    });
 
-    return () => unsubscribe();
-  }, []);
-
-  // Helper: fetch API with auth token
-  const authFetch = async (url, options = {}) => {
-    const headers = {
-      ...options.headers,
-      Authorization: token ? `Bearer ${token}` : "",
-      "Content-Type": "application/json",
-    };
-    const res = await fetch(url, { ...options, headers });
-    return res.json();
+      const token = await userCred.user.getIdToken();
+      onLogin(token); // pass token to parent (optional)
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
-  // Fetch dashboard data
-  useEffect(() => {
-    if (!user) return; // only fetch when logged in
-
-    async function fetchAll() {
-      try {
-        setTodoTasks(await getTodos(authFetch));
-        setExerciseEntries(await getExerciseEntries(authFetch));
-        setSleepEntries(await getSleepEntries(authFetch));
-        setWellnessEntries(await getWellnessEntries(authFetch));
-      } catch (err) {
-        console.error("Failed to fetch dashboard data:", err);
-      }
-    }
-
-    fetchAll();
-  }, [user, token]);
-
-  // Derived snapshots
-  const today = toLocalDate(new Date());
-  const yesterday = (() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 1);
-    return toLocalDate(d);
-  })();
-
-  const todayExerciseMinutes = exerciseEntries
-    .filter((e) => e.date === today)
-    .reduce((sum, e) => sum + (e.duration || 0), 0);
-  const todayExercise = exerciseEntries.filter((e) => e.date === today);
-
-  const lastNightSleep = sleepEntries.find((s) => s.date === yesterday) || null;
-  const lastNightSleepHours = lastNightSleep ? lastNightSleep.hours : 0;
-
-  const todayWellness = wellnessEntries.find((w) => w.date === today) || null;
-  const incompleteTodoTasks = todoTasks.filter((task) => !task.completed);
-
   return (
-    <DashboardContext.Provider
-      value={{
-        user,
-        token,
-        authFetch,
+    <div style={{ maxWidth: "400px", margin: "auto" }}>
+      <h2>{isSignUp ? "Sign Up" : "Login"}</h2>
+      <form onSubmit={handleSubmit}>
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        /><br />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        /><br />
+        <button type="submit">{isSignUp ? "Sign Up" : "Login"}</button>
+      </form>
 
-        // raw data
-        todoTasks,
-        setTodoTasks,
-        exerciseEntries,
-        setExerciseEntries,
-        sleepEntries,
-        setSleepEntries,
-        wellnessEntries,
-        setWellnessEntries,
+      <p style={{ color: "red" }}>{error}</p>
 
-        // derived
-        incompleteTodoTasks,
-        todayExerciseMinutes,
-        lastNightSleepHours,
-        todayWellness,
-        todayExercise,
-
-        wellnessStatus,
-        setWellnessStatus,
-      }}
-    >
-      {children}
-    </DashboardContext.Provider>
+      <p style={{ marginTop: "1rem" }}>
+        {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
+        <button
+          style={{ color: "blue", background: "none", border: "none", cursor: "pointer" }}
+          onClick={() => setIsSignUp(!isSignUp)}
+        >
+          {isSignUp ? "Login" : "Sign Up"}
+        </button>
+      </p>
+    </div>
   );
 }

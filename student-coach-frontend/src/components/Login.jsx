@@ -1,18 +1,27 @@
 import React, { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 
 export default function Login({ onLogin }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isNewUser, setIsNewUser] = useState(false);
 
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+
     try {
-      const userCred = await signInWithEmailAndPassword(auth, email, password);
-      const token = await userCred.user.getIdToken(); // get Firebase ID token
-      onLogin(token); // pass token up to parent
+      let userCred;
+      if (isNewUser) {
+        userCred = await createUserWithEmailAndPassword(auth, email, password);
+      } else {
+        userCred = await signInWithEmailAndPassword(auth, email, password);
+      }
+
+      const token = await userCred.user.getIdToken();
+      onLogin(token); // pass token up to DashboardContext
     } catch (err) {
       setError(err.message);
     }
@@ -20,23 +29,28 @@ export default function Login({ onLogin }) {
 
   return (
     <div>
-      <h2>Login</h2>
-      <form onSubmit={handleLogin}>
+      <h2>{isNewUser ? "Sign Up" : "Login"}</h2>
+      <form onSubmit={handleSubmit}>
         <input
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          required
         /><br />
         <input
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          required
         /><br />
-        <button type="submit">Login</button>
+        {error && <p style={{ color: "red" }}>{error}</p>}
+        <button type="submit">{isNewUser ? "Sign Up" : "Login"}</button>
       </form>
-      {error && <p style={{color:"red"}}>{error}</p>}
+      <button onClick={() => setIsNewUser(!isNewUser)}>
+        {isNewUser ? "Already have an account? Login" : "New user? Sign Up"}
+      </button>
     </div>
   );
 }
