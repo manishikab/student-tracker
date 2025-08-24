@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect } from "react";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "./firebase.js"; // ONLY import auth here
+import { auth } from "./firebase.js"; // only once
 
 import { getTodos } from "./api/todoApi";
 import { getExerciseEntries } from "./api/exerciseApi";
@@ -15,16 +15,6 @@ const toLocalDate = (d) => {
 };
 
 export const DashboardContext = createContext();
-
-// Initialize Firebase
-const firebaseConfig = {
-  apiKey: "YOUR_FIREBASE_API_KEY",
-  authDomain: "YOUR_FIREBASE_AUTH_DOMAIN",
-  projectId: "YOUR_FIREBASE_PROJECT_ID",
-  // ...other config
-};
-
-import { auth } from "./firebase.js";
 
 export function DashboardProvider({ children }) {
   // Auth state
@@ -71,17 +61,10 @@ export function DashboardProvider({ children }) {
 
     async function fetchAll() {
       try {
-        const todos = await getTodos(authFetch);
-        setTodoTasks(todos);
-
-        const exercise = await getExerciseEntries(authFetch);
-        setExerciseEntries(exercise);
-
-        const sleep = await getSleepEntries(authFetch);
-        setSleepEntries(sleep);
-
-        const wellness = await getWellnessEntries(authFetch);
-        setWellnessEntries(wellness);
+        setTodoTasks(await getTodos(authFetch));
+        setExerciseEntries(await getExerciseEntries(authFetch));
+        setSleepEntries(await getSleepEntries(authFetch));
+        setWellnessEntries(await getWellnessEntries(authFetch));
       } catch (err) {
         console.error("Failed to fetch dashboard data:", err);
       }
