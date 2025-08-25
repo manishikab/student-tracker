@@ -4,7 +4,7 @@ import { auth } from "../firebase";
 import { DashboardContext } from "../DashboardContext";
 
 export default function Login() {
-  const { setToken } = useContext(DashboardContext); // <- use DashboardContext setter
+  const { setToken } = useContext(DashboardContext); // get token setter directly from context
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
@@ -18,17 +18,17 @@ export default function Login() {
 
     try {
       let userCred;
-
       if (isSignUp) {
         userCred = await createUserWithEmailAndPassword(auth, email, password);
       } else {
         userCred = await signInWithEmailAndPassword(auth, email, password);
       }
 
+      // Get Firebase ID token and store it in DashboardContext
       const idToken = await userCred.user.getIdToken();
-      setToken(idToken); // <- now properly updates DashboardContext
+      setToken(idToken);
     } catch (err) {
-      setError(err.code?.includes("auth/") ? "Invalid email or password" : err.message);
+      setError(err.code?.startsWith("auth/") ? "Invalid email or password" : err.message);
     } finally {
       setLoading(false);
     }
@@ -37,7 +37,6 @@ export default function Login() {
   return (
     <div style={{ maxWidth: "400px", margin: "auto", padding: "1rem" }}>
       <h2>{isSignUp ? "Sign Up" : "Login"}</h2>
-
       <form onSubmit={handleSubmit}>
         <input
           type="email"

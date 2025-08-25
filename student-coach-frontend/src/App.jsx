@@ -18,35 +18,47 @@ export default function App() {
   );
 }
 
-// Component that consumes DashboardContext
+// Separate component to consume DashboardContext
 function DashboardContent() {
   const { token, loadingAuth } = useContext(DashboardContext);
 
-  // Show a loading screen while Firebase auth initializes
+  // Show loading screen while Firebase auth initializes
   if (loadingAuth) return <p>Loading...</p>;
 
-  // If not authenticated, show login
+  // Show login if not authenticated
   if (!token) return <Login />;
 
   // User is logged in, show dashboard
   return (
     <Router>
       <nav className="navbar">
-        <NavLink to="/" end className="nav-link">Home</NavLink>
-        <NavLink to="/calendar" className="nav-link">Calendar</NavLink>
-        <NavLink to="/todos" className="nav-link">Todos</NavLink>
-        <NavLink to="/sleep" className="nav-link">Sleep</NavLink>
-        <NavLink to="/wellness" className="nav-link">Wellness</NavLink>
-        <NavLink to="/exercise" className="nav-link">Exercise</NavLink>
+        <NavLink to="/" end className="nav-link">
+          Home
+        </NavLink>
+        <NavLink to="/calendar" className="nav-link">
+          Calendar
+        </NavLink>
+        <NavLink to="/todos" className="nav-link">
+          Todos
+        </NavLink>
+        <NavLink to="/sleep" className="nav-link">
+          Sleep
+        </NavLink>
+        <NavLink to="/wellness" className="nav-link">
+          Wellness
+        </NavLink>
+        <NavLink to="/exercise" className="nav-link">
+          Exercise
+        </NavLink>
       </nav>
 
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/todos" element={<TodoPage />} />
         <Route path="/sleep" element={<SleepPage />} />
         <Route path="/wellness" element={<WellnessPage />} />
         <Route path="/exercise" element={<ExercisePage />} />
+        <Route path="/calendar" element={<CalendarPage />} />
         {/* Redirect any unknown route to home */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
