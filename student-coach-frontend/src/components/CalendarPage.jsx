@@ -3,15 +3,21 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { DashboardContext } from "../DashboardContext";
 import "../CalendarPage.css";
-import { useAuth } from "../App";
+import { AuthContext } from "../App"; // Use AuthContext directly
 
 const API_URL = import.meta.env.VITE_FASTAPI_URL;
 
 export default function CalendarPage() {
-  const { sleepEntries: contextSleep, exerciseEntries: contextExercise, wellnessEntries: contextWellness, setSleepEntries, setExerciseEntries, setWellnessEntries } =
-    useContext(DashboardContext);
+  const {
+    sleepEntries: contextSleep,
+    exerciseEntries: contextExercise,
+    wellnessEntries: contextWellness,
+    setSleepEntries,
+    setExerciseEntries,
+    setWellnessEntries,
+  } = useContext(DashboardContext);
 
-  const token = useAuth();
+  const token = useContext(AuthContext); // get Firebase token from App.jsx
 
   const [sleepEntries, setLocalSleepEntries] = useState([]);
   const [exerciseEntries, setLocalExerciseEntries] = useState([]);
@@ -146,10 +152,9 @@ export default function CalendarPage() {
               {dailyLogs.wellness.map((w, i) => (
                 <p key={i}>🌱 Mood {w.mood}/10, Energy {w.energy}/10</p>
               ))}
-              {dailyLogs.sleep.length +
-                dailyLogs.exercise.length +
-                dailyLogs.wellness.length ===
-                0 && <p>No logs for this day.</p>}
+              {dailyLogs.sleep.length + dailyLogs.exercise.length + dailyLogs.wellness.length === 0 && (
+                <p>No logs for this day.</p>
+              )}
             </div>
           )}
         </div>

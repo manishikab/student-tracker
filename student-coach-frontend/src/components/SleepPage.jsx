@@ -11,14 +11,13 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { useAuth } from "../App"; // custom hook from App.jsx
+import { AuthContext } from "../App"; // custom hook from App.jsx
 
 const API_URL = import.meta.env.VITE_FASTAPI_URL;
 
 export default function SleepPage() {
   const { sleepEntries, setSleepEntries } = useContext(DashboardContext);
-  const token = useAuth(); // Firebase ID token
-
+  const token = useContext(AuthContext);
   const [sleeps, setSleeps] = useState([]);
   const [hours, setHours] = useState("");
   const [date, setDate] = useState("");

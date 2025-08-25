@@ -2,10 +2,10 @@ import { useContext, useState, useEffect } from "react";
 import { DashboardContext } from "../DashboardContext";
 import styles from "../AIAssistant.module.css";
 import { EXPRESS_URL } from "../config.js";
-import { useAuth } from "../App";
+import { AuthContext } from "../App"; // Use AuthContext
 
 export default function AiAssistant({ currentPage }) {
-  const token = useAuth();
+  const token = useContext(AuthContext); // get Firebase token from App.jsx
   const { 
     todoTasks, 
     sleepEntries, 
@@ -23,7 +23,7 @@ export default function AiAssistant({ currentPage }) {
 
   // Fetch a tip when chat first opens
   useEffect(() => {
-    if (open && chat.length === 0) fetchTip();
+    if (open && chat.length === 0 && token) fetchTip();
   }, [open, token]); // wait for token
 
   const fetchTip = async () => {

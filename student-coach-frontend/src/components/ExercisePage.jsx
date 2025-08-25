@@ -11,13 +11,13 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import styles from "../ExercisePage.module.css";
-import { useAuth } from "../App"; // Firebase ID token
+import { AuthContext } from "../App";  // ✅ use context instead of calling Firebase directly
 
 const API_URL = import.meta.env.VITE_FASTAPI_URL;
 
 export default function ExercisePage() {
   const { exerciseEntries, setExerciseEntries } = useContext(DashboardContext);
-  const token = useAuth(); // Firebase ID token
+  const token = useContext(AuthContext); // ✅ get token from context
 
   const [entries, setEntries] = useState([]);
   const [chartData, setChartData] = useState([]);
@@ -69,7 +69,7 @@ export default function ExercisePage() {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}` 
+          Authorization: `Bearer ${token}`, // ✅ token passed
         },
         body: JSON.stringify({ date, title, duration: Number(duration), intensity, notes }),
       });
@@ -96,7 +96,7 @@ export default function ExercisePage() {
     try {
       await fetch(`${API_URL}/exercise/${id}/`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` }, // ✅ token passed
       });
       const updatedEntries = entries.filter((e) => e.id !== id);
       setEntries(updatedEntries);

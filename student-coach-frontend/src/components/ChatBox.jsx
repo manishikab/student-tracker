@@ -1,11 +1,11 @@
-import React, { useState, useContext } from 'react';
-import { DashboardContext } from '../DashboardContext';
-import { useAuth } from '../App';
-import '../Chatbox.css';
-import { EXPRESS_URL } from '../config.js';
+import React, { useState, useContext } from "react";
+import { DashboardContext } from "../DashboardContext";
+import { AuthContext } from "../App"; // Firebase token context
+import "../Chatbox.css";
+import { EXPRESS_URL } from "../config.js";
 
 export default function ChatBox({ currentPage }) {
-  const token = useAuth();
+  const token = useContext(AuthContext); // get token from App.jsx
   const {
     todoTasks,
     sleepEntries,
@@ -16,7 +16,7 @@ export default function ChatBox({ currentPage }) {
     lastNightSleepHours,
   } = useContext(DashboardContext);
 
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -24,8 +24,8 @@ export default function ChatBox({ currentPage }) {
     if (!input.trim() || !token) return;
 
     const userMessage = input.trim();
-    setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
-    setInput('');
+    setMessages((prev) => [...prev, { role: "user", text: userMessage }]);
+    setInput("");
     setLoading(true);
 
     const promptMessage = `
@@ -33,7 +33,7 @@ export default function ChatBox({ currentPage }) {
       Context:
       - todoTasks count: ${todoTasks.length}
       - todayExerciseMinutes: ${todayExerciseMinutes}
-      - todayWellness logged: ${todayWellness ? 'yes' : 'no'}
+      - todayWellness logged: ${todayWellness ? "yes" : "no"}
       - yesterdaySleepHours: ${lastNightSleepHours}
       - sleep entries: ${sleepEntries.length} entries
       - exercise entries: ${exerciseEntries.length} entries
@@ -43,23 +43,23 @@ export default function ChatBox({ currentPage }) {
 
     try {
       const res = await fetch(`${EXPRESS_URL}/chat`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}` // attach user token
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // attach Firebase token
         },
         body: JSON.stringify({
           message: promptMessage,
           page: currentPage,
-          context: { todoTasks, sleepEntries, wellnessEntries, exerciseEntries, todayExerciseMinutes, todayWellness }
+          context: { todoTasks, sleepEntries, wellnessEntries, exerciseEntries, todayExerciseMinutes, todayWellness },
         }),
       });
 
       const data = await res.json();
-      setMessages(prev => [...prev, { role: 'ai', text: data.reply || 'No response.' }]);
+      setMessages((prev) => [...prev, { role: "ai", text: data.reply || "No response." }]);
     } catch (err) {
       console.error(err);
-      setMessages(prev => [...prev, { role: 'ai', text: 'Error: could not reach AI' }]);
+      setMessages((prev) => [...prev, { role: "ai", text: "Error: could not reach AI" }]);
     } finally {
       setLoading(false);
     }
@@ -70,7 +70,7 @@ export default function ChatBox({ currentPage }) {
       <div className="messages">
         <h3>Chat with your AI Wellness Coach!</h3>
         {messages.map((msg, i) => (
-          <div key={i} className={`message ${msg.role === 'user' ? 'user' : 'ai'}`}>
+          <div key={i} className={`message ${msg.role === "user" ? "user" : "ai"}`}>
             {msg.text}
           </div>
         ))}
@@ -79,10 +79,10 @@ export default function ChatBox({ currentPage }) {
       <div className="input-area">
         <input
           value={input}
-          onChange={e => setInput(e.target.value)}
+          onChange={(e) => setInput(e.target.value)}
           placeholder="Type a message..."
-          onKeyDown={e => {
-            if (e.key === 'Enter') {
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
               sendMessage();
               e.preventDefault();
             }
@@ -90,7 +90,7 @@ export default function ChatBox({ currentPage }) {
           disabled={loading}
         />
         <button onClick={sendMessage} disabled={loading}>
-          {loading ? 'Thinking...' : 'Send'}
+          {loading ? "Thinking..." : "Send"}
         </button>
       </div>
     </div>

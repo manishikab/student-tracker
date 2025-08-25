@@ -11,14 +11,13 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { useAuth } from "../App"; // custom hook from App.jsx
+import { AuthContext } from "../App"; // custom hook from App.jsx
 
 const API_URL = import.meta.env.VITE_FASTAPI_URL;
 
 export default function WellnessPage() {
   const { wellnessStatus, setWellnessStatus } = useContext(DashboardContext);
-  const token = useAuth(); // get Firebase ID token
-
+  const token = useContext(AuthContext);
   const [entries, setEntries] = useState([]);
   const [chartData, setChartData] = useState([]);
   const [mood, setMood] = useState("");

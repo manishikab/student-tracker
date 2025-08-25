@@ -1,8 +1,5 @@
 import React, { useState } from "react";
-import { 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword 
-} from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
 
 export default function Login({ onLogin }) {
@@ -17,23 +14,24 @@ export default function Login({ onLogin }) {
 
     try {
       let userCred;
+
       if (isSignUp) {
-        // Sign up new user
         userCred = await createUserWithEmailAndPassword(auth, email, password);
       } else {
-        // Login existing user
         userCred = await signInWithEmailAndPassword(auth, email, password);
       }
 
+      // Get Firebase ID token
       const token = await userCred.user.getIdToken();
-      onLogin(token); // pass token to parent (optional)
+      onLogin(token); // store token in AuthContext (App.jsx)
     } catch (err) {
-      setError(err.message);
+      // Friendly error message
+      setError(err.code?.includes("auth/") ? "Invalid email or password" : err.message);
     }
   };
 
   return (
-    <div style={{ maxWidth: "400px", margin: "auto" }}>
+    <div style={{ maxWidth: "400px", margin: "auto", padding: "1rem" }}>
       <h2>{isSignUp ? "Sign Up" : "Login"}</h2>
       <form onSubmit={handleSubmit}>
         <input
@@ -42,20 +40,24 @@ export default function Login({ onLogin }) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-        /><br />
+          style={{ width: "100%", marginBottom: "0.5rem", padding: "0.5rem" }}
+        />
         <input
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-        /><br />
-        <button type="submit">{isSignUp ? "Sign Up" : "Login"}</button>
+          style={{ width: "100%", marginBottom: "0.5rem", padding: "0.5rem" }}
+        />
+        <button type="submit" style={{ width: "100%", padding: "0.5rem" }}>
+          {isSignUp ? "Sign Up" : "Login"}
+        </button>
       </form>
 
-      <p style={{ color: "red" }}>{error}</p>
+      {error && <p style={{ color: "red", marginTop: "0.5rem" }}>{error}</p>}
 
-      <p style={{ marginTop: "1rem" }}>
+      <p style={{ marginTop: "1rem", textAlign: "center" }}>
         {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
         <button
           style={{ color: "blue", background: "none", border: "none", cursor: "pointer" }}
