@@ -9,6 +9,7 @@ import CalendarPage from "./components/CalendarPage";
 import Login from "./components/Login";
 import { DashboardProvider, DashboardContext } from "./DashboardContext";
 import "./App.css";
+import { auth, signOut } from "./firebase";
 
 export default function App() {
   return (
@@ -20,13 +21,23 @@ export default function App() {
 
 // Separate component to consume DashboardContext
 function DashboardContent() {
-  const { token, loadingAuth } = useContext(DashboardContext);
+  const { token, loadingAuth, setToken } = useContext(DashboardContext);
 
   // Show loading screen while Firebase auth initializes
   if (loadingAuth) return <p>Loading...</p>;
 
   // Show login if not authenticated
   if (!token) return <Login />;
+
+  // Logout handler
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);  // Firebase logout
+      setToken(null);       // clear context token to show Login
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  };
 
   // User is logged in, show dashboard
   return (
@@ -52,7 +63,7 @@ function DashboardContent() {
         </NavLink>
 
         {/* ✅ Logout button */}
-        <button onClick={() => signOut(auth)} className="nav-link">
+        <button onClick={handleLogout} className="nav-link">
           Logout
         </button>
       </nav>
