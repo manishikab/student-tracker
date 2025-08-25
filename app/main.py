@@ -7,6 +7,8 @@ from app.routes import todo_routes, sleep_routes, wellness_routes, exercise_rout
 
 from app import models, database
 
+from app.test_routes import router as test_router
+
 load_dotenv()
 models.Base.metadata.create_all(bind=database.engine)
 
@@ -38,6 +40,9 @@ app.include_router(exercise_routes.router)
 app.include_router(sleep_routes.router)
 app.include_router(wellness_routes.router)
 app.include_router(goals.router)
+
+
+app.include_router(test_router)
 
 @app.get("/test-cors")
 def test_cors():

@@ -14,10 +14,3 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
 export { app, auth, firebaseSignOut as signOut };
-
-// -- TEMPORARY: log the ID token for testing
-auth.onAuthStateChanged(user => {
-  if (user) {
-    user.getIdToken().then(token => console.log("Firebase ID token:", token));
-  }
-});
