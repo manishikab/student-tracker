@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
-import { useAuthContext } from "../App"; // get token setter from context
+import { DashboardContext } from "../DashboardContext";
 
 export default function Login() {
-  const setToken = useAuthContext(); // this updates AuthContext automatically
+  const { setToken } = useContext(DashboardContext); // <- use DashboardContext setter
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
@@ -25,9 +25,8 @@ export default function Login() {
         userCred = await signInWithEmailAndPassword(auth, email, password);
       }
 
-      // Get Firebase ID token and store in AuthContext
       const idToken = await userCred.user.getIdToken();
-      setToken(idToken);
+      setToken(idToken); // <- now properly updates DashboardContext
     } catch (err) {
       setError(err.code?.includes("auth/") ? "Invalid email or password" : err.message);
     } finally {

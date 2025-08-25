@@ -107,9 +107,10 @@ export function DashboardProvider({ children }) {
       value={{
         user,
         token,
+        setToken,       // <-- expose setter
         loadingAuth,
         authFetch,
-
+  
         // raw data
         todoTasks,
         setTodoTasks,
@@ -119,14 +120,14 @@ export function DashboardProvider({ children }) {
         setSleepEntries,
         wellnessEntries,
         setWellnessEntries,
-
+  
         // derived
         incompleteTodoTasks,
         todayExerciseMinutes,
         lastNightSleepHours,
         todayWellness,
         todayExercise,
-
+  
         wellnessStatus,
         setWellnessStatus,
       }}
@@ -134,4 +135,4 @@ export function DashboardProvider({ children }) {
       {children}
     </DashboardContext.Provider>
   );
-}
+}  
