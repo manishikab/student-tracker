@@ -11,13 +11,12 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { AuthContext } from "../App"; // custom hook from App.jsx
 
 const API_URL = import.meta.env.VITE_FASTAPI_URL;
 
 export default function SleepPage() {
   const { sleepEntries, setSleepEntries } = useContext(DashboardContext);
-  const token = useContext(AuthContext);
+  const { token } = useContext(DashboardContext);
   const [sleeps, setSleeps] = useState([]);
   const [hours, setHours] = useState("");
   const [date, setDate] = useState("");

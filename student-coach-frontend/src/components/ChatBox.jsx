@@ -1,11 +1,10 @@
 import React, { useState, useContext } from "react";
 import { DashboardContext } from "../DashboardContext";
-import { AuthContext } from "../App"; // Firebase token context
 import "../Chatbox.css";
 import { EXPRESS_URL } from "../config.js";
 
 export default function ChatBox({ currentPage }) {
-  const token = useContext(AuthContext); // get token from App.jsx
+  const { token } = useContext(DashboardContext);
   const {
     todoTasks,
     sleepEntries,

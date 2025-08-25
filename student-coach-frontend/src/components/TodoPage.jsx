@@ -2,13 +2,12 @@ import styles from "../TodoPage.module.css";
 import React, { useState, useEffect, useContext } from "react";
 import { DashboardContext } from "../DashboardContext";
 import AiAssistant from "../components/AiAssistant.jsx";
-import { AuthContext } from "../App"; // custom hook from App.jsx
 
 const API_URL = import.meta.env.VITE_FASTAPI_URL;
 
 export default function TodoPage() {
   const { todoTasks, setTodoTasks } = useContext(DashboardContext);
-  const token = useContext(AuthContext);
+  const { token } = useContext(DashboardContext);
   const [todos, setTodos] = useState([]);
   const [newTodo, setNewTodo] = useState("");
   const [category, setCategory] = useState("upcoming");

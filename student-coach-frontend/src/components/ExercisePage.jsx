@@ -11,13 +11,12 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import styles from "../ExercisePage.module.css";
-import { AuthContext } from "../App";  // ✅ use context instead of calling Firebase directly
 
 const API_URL = import.meta.env.VITE_FASTAPI_URL;
 
 export default function ExercisePage() {
   const { exerciseEntries, setExerciseEntries } = useContext(DashboardContext);
-  const token = useContext(AuthContext); // ✅ get token from context
+  const { token } = useContext(DashboardContext);
 
   const [entries, setEntries] = useState([]);
   const [chartData, setChartData] = useState([]);

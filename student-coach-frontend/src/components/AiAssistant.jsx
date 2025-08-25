@@ -2,11 +2,10 @@ import { useContext, useState, useEffect } from "react";
 import { DashboardContext } from "../DashboardContext";
 import styles from "../AIAssistant.module.css";
 import { EXPRESS_URL } from "../config.js";
-import { AuthContext } from "../App"; // Use AuthContext
 
 export default function AiAssistant({ currentPage }) {
-  const token = useContext(AuthContext); // get Firebase token from App.jsx
   const { 
+    token, // get token from DashboardContext
     todoTasks, 
     sleepEntries, 
     wellnessEntries, 

@@ -2,12 +2,11 @@ import React, { useState, useContext, useEffect } from "react";
 import ChatBox from "./ChatBox";
 import "../HomePage.css";
 import { DashboardContext } from "../DashboardContext";
-import { AuthContext } from "../App";
 
 const API_URL = import.meta.env.VITE_FASTAPI_URL;
 
 export default function HomePage() {
-  const token = useContext(AuthContext);
+  const { token } = useContext(DashboardContext);
   const [goals, setGoals] = useState([]);
   const [goalInput, setGoalInput] = useState("");
 
