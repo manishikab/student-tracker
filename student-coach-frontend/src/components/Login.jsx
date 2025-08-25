@@ -1,16 +1,20 @@
 import React, { useState } from "react";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
+import { useAuthContext } from "../App"; // get token setter from context
 
-export default function Login({ onLogin }) {
+export default function Login() {
+  const setToken = useAuthContext(); // this updates AuthContext automatically
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
     try {
       let userCred;
@@ -21,18 +25,20 @@ export default function Login({ onLogin }) {
         userCred = await signInWithEmailAndPassword(auth, email, password);
       }
 
-      // Get Firebase ID token
-      const token = await userCred.user.getIdToken();
-      onLogin(token); // store token in AuthContext (App.jsx)
+      // Get Firebase ID token and store in AuthContext
+      const idToken = await userCred.user.getIdToken();
+      setToken(idToken);
     } catch (err) {
-      // Friendly error message
       setError(err.code?.includes("auth/") ? "Invalid email or password" : err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div style={{ maxWidth: "400px", margin: "auto", padding: "1rem" }}>
       <h2>{isSignUp ? "Sign Up" : "Login"}</h2>
+
       <form onSubmit={handleSubmit}>
         <input
           type="email"
@@ -41,6 +47,7 @@ export default function Login({ onLogin }) {
           onChange={(e) => setEmail(e.target.value)}
           required
           style={{ width: "100%", marginBottom: "0.5rem", padding: "0.5rem" }}
+          disabled={loading}
         />
         <input
           type="password"
@@ -49,9 +56,10 @@ export default function Login({ onLogin }) {
           onChange={(e) => setPassword(e.target.value)}
           required
           style={{ width: "100%", marginBottom: "0.5rem", padding: "0.5rem" }}
+          disabled={loading}
         />
-        <button type="submit" style={{ width: "100%", padding: "0.5rem" }}>
-          {isSignUp ? "Sign Up" : "Login"}
+        <button type="submit" style={{ width: "100%", padding: "0.5rem" }} disabled={loading}>
+          {loading ? "Please wait..." : isSignUp ? "Sign Up" : "Login"}
         </button>
       </form>
 

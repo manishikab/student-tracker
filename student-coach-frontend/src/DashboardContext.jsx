@@ -20,6 +20,7 @@ export function DashboardProvider({ children }) {
   // Auth state
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
+  const [loadingAuth, setLoadingAuth] = useState(true); // track if auth is ready
 
   // Dashboard state
   const [todoTasks, setTodoTasks] = useState([]);
@@ -39,6 +40,7 @@ export function DashboardProvider({ children }) {
         setUser(null);
         setToken(null);
       }
+      setLoadingAuth(false); // auth state resolved
     });
 
     return () => unsubscribe();
@@ -46,18 +48,26 @@ export function DashboardProvider({ children }) {
 
   // Helper: fetch API with auth token
   const authFetch = async (url, options = {}) => {
+    if (!token) throw new Error("No token available for authFetch");
+
     const headers = {
       ...options.headers,
-      Authorization: token ? `Bearer ${token}` : "",
+      Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     };
+
     const res = await fetch(url, { ...options, headers });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`HTTP ${res.status}: ${text}`);
+    }
     return res.json();
   };
 
-  // Fetch dashboard data
+  // Fetch dashboard data once token is ready
   useEffect(() => {
-    if (!user) return; // only fetch when logged in
+    if (!token) return; // wait until token is set
+    if (!user) return; // ensure user exists
 
     async function fetchAll() {
       try {
@@ -71,7 +81,7 @@ export function DashboardProvider({ children }) {
     }
 
     fetchAll();
-  }, [user, token]);
+  }, [token, user]);
 
   // Derived snapshots
   const today = toLocalDate(new Date());
@@ -97,6 +107,7 @@ export function DashboardProvider({ children }) {
       value={{
         user,
         token,
+        loadingAuth,
         authFetch,
 
         // raw data
