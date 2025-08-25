@@ -5,7 +5,10 @@ import os
 
 from app.routes import todo_routes, sleep_routes, wellness_routes, exercise_routes, goals
 
+from app import models, database
+
 load_dotenv()
+models.Base.metadata.create_all(bind=database.engine)
 
 # Frontend origins
 FRONTEND_URLS = [

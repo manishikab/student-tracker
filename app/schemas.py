@@ -5,8 +5,7 @@ from typing import Optional
 # Todo schemas
 class TodoBase(BaseModel):
     title: str
-    description: str | None = None
-    category: Optional[str] = "today" 
+    category: Optional[str] = "today"
     completed: bool = False
 
 class TodoCreate(TodoBase):

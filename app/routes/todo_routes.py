@@ -43,10 +43,11 @@ def update_todo(
     ).first()
     if not db_todo:
         raise HTTPException(status_code=404, detail="Todo not found")
+
     if todo.completed is not None:
         db_todo.completed = todo.completed
-    if todo.text is not None:
-        db_todo.text = todo.text
+    if todo.title is not None:   # ✅ fixed from "text" → "title"
+        db_todo.title = todo.title
 
     db.commit()
     db.refresh(db_todo)

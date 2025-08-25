@@ -6,7 +6,6 @@ class TodoItem(Base):
     __tablename__ = "todo_list"
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True)
-    description = Column(String, nullable=True)
     category = Column(String, default="today")
     completed = Column(Boolean, default=False)
     user_id = Column(String, index=True, nullable=False)

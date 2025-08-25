@@ -34,7 +34,7 @@ export function DashboardProvider({ children }) {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         setUser(firebaseUser);
-        const idToken = await firebaseUser.getIdToken();
+        const idToken = await firebaseUser.getIdToken(true); 
         setToken(idToken);
       } else {
         setUser(null);

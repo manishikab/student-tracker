@@ -50,6 +50,11 @@ function DashboardContent() {
         <NavLink to="/exercise" className="nav-link">
           Exercise
         </NavLink>
+
+        {/* ✅ Logout button */}
+        <button onClick={() => signOut(auth)} className="nav-link">
+          Logout
+        </button>
       </nav>
 
       <Routes>
