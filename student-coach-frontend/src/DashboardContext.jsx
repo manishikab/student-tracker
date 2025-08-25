@@ -20,7 +20,7 @@ export function DashboardProvider({ children }) {
   // Auth state
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
-  const [loadingAuth, setLoadingAuth] = useState(true); // track if auth is ready
+  const [loadingAuth, setLoadingAuth] = useState(true);
 
   // Dashboard state
   const [todoTasks, setTodoTasks] = useState([]);
@@ -34,25 +34,28 @@ export function DashboardProvider({ children }) {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         setUser(firebaseUser);
-        const idToken = await firebaseUser.getIdToken(true); 
+        const idToken = await firebaseUser.getIdToken(true);
         setToken(idToken);
       } else {
         setUser(null);
         setToken(null);
       }
-      setLoadingAuth(false); // auth state resolved
+      setLoadingAuth(false);
     });
 
     return () => unsubscribe();
   }, []);
 
-  // Helper: fetch API with auth token
+  // Helper: fetch API with fresh auth token
   const authFetch = async (url, options = {}) => {
-    if (!token) throw new Error("No token available for authFetch");
+    if (!user) throw new Error("No user available for authFetch");
+
+    const idToken = await user.getIdToken(true); // force refresh
+    setToken(idToken);
 
     const headers = {
       ...options.headers,
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${idToken}`,
       "Content-Type": "application/json",
     };
 
@@ -64,10 +67,9 @@ export function DashboardProvider({ children }) {
     return res.json();
   };
 
-  // Fetch dashboard data once token is ready
+  // Fetch dashboard data whenever user exists
   useEffect(() => {
-    if (!token) return; // wait until token is set
-    if (!user) return; // ensure user exists
+    if (!user) return;
 
     async function fetchAll() {
       try {
@@ -81,7 +83,7 @@ export function DashboardProvider({ children }) {
     }
 
     fetchAll();
-  }, [token, user]);
+  }, [user]);
 
   // Derived snapshots
   const today = toLocalDate(new Date());
@@ -107,10 +109,10 @@ export function DashboardProvider({ children }) {
       value={{
         user,
         token,
-        setToken,       // <-- expose setter
+        setToken,
         loadingAuth,
         authFetch,
-  
+
         // raw data
         todoTasks,
         setTodoTasks,
@@ -120,14 +122,14 @@ export function DashboardProvider({ children }) {
         setSleepEntries,
         wellnessEntries,
         setWellnessEntries,
-  
+
         // derived
         incompleteTodoTasks,
         todayExerciseMinutes,
         lastNightSleepHours,
         todayWellness,
         todayExercise,
-  
+
         wellnessStatus,
         setWellnessStatus,
       }}
@@ -135,4 +137,4 @@ export function DashboardProvider({ children }) {
       {children}
     </DashboardContext.Provider>
   );
-}  
+}

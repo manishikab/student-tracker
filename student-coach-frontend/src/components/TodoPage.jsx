@@ -5,14 +5,16 @@ import AiAssistant from "../components/AiAssistant.jsx";
 
 export default function TodoPage() {
   const { todoTasks, setTodoTasks, authFetch } = useContext(DashboardContext);
+  const [todos, setTodos] = useState([]);
   const [newTodo, setNewTodo] = useState("");
   const [category, setCategory] = useState("upcoming");
 
-  // Fetch todos on mount
+  // Fetch todos once on mount
   useEffect(() => {
     async function fetchTodos() {
       try {
         const data = await authFetch("/todos/");
+        setTodos(data);
         setTodoTasks(data);
       } catch (err) {
         console.error("Failed to fetch todos:", err);
@@ -22,45 +24,57 @@ export default function TodoPage() {
     fetchTodos();
   }, [authFetch, setTodoTasks]);
 
+  // Add new todo
   async function handleAddTodo() {
     if (!newTodo.trim()) return;
-
     try {
       const created = await authFetch("/todos/", {
         method: "POST",
         body: JSON.stringify({ title: newTodo, completed: false, category }),
       });
-      setTodoTasks([...todoTasks, created]);
+
+      const updatedTodos = [...todos, created];
+      setTodos(updatedTodos);
+      setTodoTasks(updatedTodos);
+
       setNewTodo("");
       setCategory("today");
     } catch (err) {
-      console.error(err);
+      console.error("Failed to add todo:", err);
     }
   }
 
+  // Toggle completion
   async function handleToggleComplete(todo) {
     try {
       const updated = await authFetch(`/todos/${todo.id}/`, {
         method: "PUT",
         body: JSON.stringify({ ...todo, completed: !todo.completed }),
       });
-      setTodoTasks(todoTasks.map((t) => (t.id === todo.id ? updated : t)));
+
+      const updatedTodos = todos.map((t) => (t.id === todo.id ? updated : t));
+      setTodos(updatedTodos);
+      setTodoTasks(updatedTodos);
     } catch (err) {
-      console.error(err);
+      console.error("Failed to update todo:", err);
     }
   }
 
+  // Delete todo
   async function handleDelete(todoId) {
     try {
       await authFetch(`/todos/${todoId}/`, { method: "DELETE" });
-      setTodoTasks(todoTasks.filter((t) => t.id !== todoId));
+      const updatedTodos = todos.filter((t) => t.id !== todoId);
+      setTodos(updatedTodos);
+      setTodoTasks(updatedTodos);
     } catch (err) {
-      console.error(err);
+      console.error("Failed to delete todo:", err);
     }
   }
 
-  const todayTodos = todoTasks.filter((t) => t.category === "today");
-  const upcomingTodos = todoTasks.filter((t) => t.category === "upcoming");
+  // Split by category
+  const todayTodos = todos.filter((todo) => todo.category === "today");
+  const upcomingTodos = todos.filter((todo) => todo.category === "upcoming");
 
   return (
     <div className={styles.container}>
@@ -110,7 +124,10 @@ export default function TodoPage() {
                 {todo.title}
               </span>
             </div>
-            <button onClick={() => handleDelete(todo.id)} className={styles.button}>
+            <button
+              onClick={() => handleDelete(todo.id)}
+              className={styles.button}
+            >
               Delete
             </button>
           </li>
@@ -135,14 +152,17 @@ export default function TodoPage() {
                 {todo.title}
               </span>
             </div>
-            <button onClick={() => handleDelete(todo.id)} className={styles.button}>
+            <button
+              onClick={() => handleDelete(todo.id)}
+              className={styles.button}
+            >
               Delete
             </button>
           </li>
         ))}
       </ul>
 
-      <AiAssistant currentPage="todos" todos={todoTasks} />
+      <AiAssistant currentPage="todos" todos={todos} />
     </div>
   );
 }
