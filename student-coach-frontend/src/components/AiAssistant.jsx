@@ -11,7 +11,8 @@ export default function AiAssistant({ currentPage }) {
     exerciseEntries,
     todayExerciseMinutes,
     todayWellness,
-    lastNightSleepHours
+    lastNightSleepHours,
+    goals,
   } = useContext(DashboardContext);
 
   const [open, setOpen] = useState(false);
@@ -38,6 +39,7 @@ export default function AiAssistant({ currentPage }) {
       - sleep entries: ${sleepEntries.length}
       - exercise entries: ${exerciseEntries.length}
       - wellness entries: ${wellnessEntries.length}
+      - active goals: ${goals.filter((goal) => !goal.done).map((goal) => goal.text).join(", ") || "none"}
       Only suggest exercise if todayExerciseMinutes === 0, and only suggest wellness if todayWellness is null.
     `;
 
@@ -49,7 +51,7 @@ export default function AiAssistant({ currentPage }) {
           message: promptMessage,
           userId: "default_user",
           page: currentPage,
-          context: { todoTasks, sleepEntries, wellnessEntries, exerciseEntries, todayExerciseMinutes, todayWellness }
+          context: { todoTasks, sleepEntries, wellnessEntries, exerciseEntries, todayExerciseMinutes, todayWellness, goals }
         })
       });
 
@@ -81,6 +83,7 @@ export default function AiAssistant({ currentPage }) {
       - sleep entries: ${sleepEntries.length}
       - exercise entries: ${exerciseEntries.length}
       - wellness entries: ${wellnessEntries.length}
+      - active goals: ${goals.filter((goal) => !goal.done).map((goal) => goal.text).join(", ") || "none"}
     `;
 
     try {
@@ -91,7 +94,7 @@ export default function AiAssistant({ currentPage }) {
           message: promptMessage,
           userId: "default_user",
           page: currentPage,
-          context: { todoTasks, sleepEntries, wellnessEntries, exerciseEntries, todayExerciseMinutes, todayWellness }
+          context: { todoTasks, sleepEntries, wellnessEntries, exerciseEntries, todayExerciseMinutes, todayWellness, goals }
         })
       });
 

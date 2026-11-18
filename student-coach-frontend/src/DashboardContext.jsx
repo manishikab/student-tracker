@@ -3,6 +3,7 @@ import { getTodos } from "./api/todoApi";
 import { getExerciseEntries } from "./api/exerciseApi";
 import { getSleepEntries } from "./api/sleepApi";
 import { getWellnessEntries } from "./api/wellnessAPI";
+import { getGoals } from "./api/goalsApi";
 import { DashboardContext } from "./DashboardContextValue";
 
 // helper: normalize JS Date → YYYY-MM-DD in local time
@@ -17,6 +18,7 @@ export function DashboardProvider({ children }) {
   const [exerciseEntries, setExerciseEntries] = useState([]);
   const [sleepEntries, setSleepEntries] = useState([]);
   const [wellnessEntries, setWellnessEntries] = useState([]);
+  const [goals, setGoals] = useState([]);
 
   const [wellnessStatus, setWellnessStatus] = useState(0);
 
@@ -35,6 +37,9 @@ export function DashboardProvider({ children }) {
 
       const wellness = await getWellnessEntries();
       setWellnessEntries(wellness);
+
+      const savedGoals = await getGoals();
+      setGoals(savedGoals);
     } catch (err) {
       console.error("Failed to fetch dashboard data:", err);
     }
@@ -77,6 +82,8 @@ export function DashboardProvider({ children }) {
         setSleepEntries,
         wellnessEntries,
         setWellnessEntries,
+        goals,
+        setGoals,
 
         // derived
         incompleteTodoTasks,

@@ -69,6 +69,7 @@ app.post("/chat", async (req, res) => {
       - Sleep entries: ${context.sleepEntries?.length || 0} (latest: ${context.sleepEntries?.[0]?.hours || "N/A"} hrs)
       - Exercise entries: ${context.exerciseEntries?.length || 0} (latest: ${context.exerciseEntries?.[0]?.minutes || "N/A"} mins)
       - Wellness entries: ${context.wellnessEntries?.length || 0} (latest: ${context.wellnessEntries?.[0]?.note || "N/A"})
+      - Active goals: ${context.goals?.filter(goal => !goal.done).slice(0, 3).map(goal => goal.text).join(", ") || "none"}
     `;
 
     const response = await openai.chat.completions.create({

@@ -1,35 +1,21 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext } from "react";
 import ChatBox from "./ChatBox";
 import "../HomePage.css";
 import { DashboardContext } from "../DashboardContextValue";
-import { getGoals, addGoal as apiAddGoal, updateGoal, deleteGoal as apiDeleteGoal } from "../api/goalsApi";
+import { addGoal as apiAddGoal, updateGoal, deleteGoal as apiDeleteGoal } from "../api/goalsApi";
 
 export default function HomePage() {
-  const [goals, setGoals] = useState([]);
   const [goalInput, setGoalInput] = useState("");
 
-  const { incompleteTodoTasks, todayExerciseMinutes, lastNightSleepHours, todayWellness } =
+  const { incompleteTodoTasks, todayExerciseMinutes, lastNightSleepHours, todayWellness, goals, setGoals } =
     useContext(DashboardContext);
-
-  useEffect(() => {
-  async function fetchGoals() {
-    try {
-      const data = await getGoals();
-      setGoals(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error("Failed to fetch goals:", err);
-      setGoals([]); // fallback to empty array
-    }
-  }
-  fetchGoals();
-}, []);
 
 
   const addGoal = async () => {
     if (!goalInput.trim()) return;
     try {
       const newGoal = await apiAddGoal({ text: goalInput.trim(), done: false });
-      setGoals([newGoal, ...goals]);
+      if (newGoal) setGoals((currentGoals) => [newGoal, ...currentGoals]);
       setGoalInput("");
     } catch (err) {
       console.error("Failed to add goal:", err);
@@ -40,9 +26,11 @@ export default function HomePage() {
     const goal = goals[index];
     try {
       const updated = await updateGoal(goal.id, { ...goal, done: !goal.done });
-      const newGoals = [...goals];
-      newGoals[index] = updated;
-      setGoals(newGoals);
+      if (updated) {
+        setGoals((currentGoals) => currentGoals.map((item) => (
+          item.id === goal.id ? updated : item
+        )));
+      }
     } catch (err) {
       console.error("Failed to update goal:", err);
     }
@@ -51,7 +39,7 @@ export default function HomePage() {
   const deleteGoal = async (id) => {
     try {
       await apiDeleteGoal(id);
-      setGoals(goals.filter((g) => g.id !== id));
+      setGoals((currentGoals) => currentGoals.filter((goal) => goal.id !== id));
     } catch (err) {
       console.error("Failed to delete goal:", err);
     }

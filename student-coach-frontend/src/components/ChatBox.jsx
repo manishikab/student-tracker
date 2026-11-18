@@ -12,6 +12,7 @@ export default function ChatBox({ currentPage }) {
     todayExerciseMinutes,
     todayWellness,
     lastNightSleepHours,
+    goals,
   } = useContext(DashboardContext);
 
   const [input, setInput] = useState('');
@@ -36,6 +37,7 @@ export default function ChatBox({ currentPage }) {
       - sleep entries: ${sleepEntries.length} entries
       - exercise entries: ${exerciseEntries.length} entries
       - wellness entries: ${wellnessEntries.length} entries
+      - active goals: ${goals.filter((goal) => !goal.done).map((goal) => goal.text).join(", ") || "none"}
       Only suggest exercise if todayExerciseMinutes === 0, and only suggest wellness if todayWellness is null.
     `;
 
@@ -47,7 +49,7 @@ export default function ChatBox({ currentPage }) {
           message: promptMessage,
           userId: 'default_user',
           page: currentPage,
-          context: { todoTasks, sleepEntries, wellnessEntries, exerciseEntries, todayExerciseMinutes, todayWellness }
+          context: { todoTasks, sleepEntries, wellnessEntries, exerciseEntries, todayExerciseMinutes, todayWellness, goals }
         }),
       });
 
