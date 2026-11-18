@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from "react";
-import { DashboardContext } from "../DashboardContext";
+import { DashboardContext } from "../DashboardContextValue";
 import AiAssistant from "../components/AiAssistant.jsx";
 import {
   LineChart,
@@ -15,7 +15,7 @@ import styles from "../ExercisePage.module.css";
 const API_URL = import.meta.env.VITE_FASTAPI_URL;
 
 export default function ExercisePage() {
-  const { exerciseEntries, setExerciseEntries } = useContext(DashboardContext);
+  const { setExerciseEntries } = useContext(DashboardContext);
 
   const [entries, setEntries] = useState([]);
   const [chartData, setChartData] = useState([]);

@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect } from "react";
 import ChatBox from "./ChatBox";
 import "../HomePage.css";
-import { DashboardContext } from "../DashboardContext";
+import { DashboardContext } from "../DashboardContextValue";
 import { getGoals, addGoal as apiAddGoal, updateGoal, deleteGoal as apiDeleteGoal } from "../api/goalsApi";
 
 export default function HomePage() {

@@ -1,0 +1,26 @@
+# Credentials and local configuration
+.env
+*.env
+serviceAccountKey.json
+*service-account*.json
+
+# Local application data
+*.db
+*.sqlite
+*.sqlite3
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# JavaScript build artifacts
+node_modules/
+dist/
+build/
+
+# Operating-system and editor files
+.DS_Store
+.vscode/
+.idea/

@@ -1,6 +1,6 @@
 import styles from "../WellnessPage.module.css";
 import { useState, useEffect, useContext } from "react";
-import { DashboardContext } from "../DashboardContext";
+import { DashboardContext } from "../DashboardContextValue";
 import AiAssistant from "../components/AiAssistant.jsx";
 import {
   LineChart,
@@ -16,7 +16,7 @@ import {
 const API_URL = import.meta.env.VITE_FASTAPI_URL;
 
 export default function WellnessPage() {
-  const { wellnessStatus, setWellnessStatus } = useContext(DashboardContext);
+  const { setWellnessStatus } = useContext(DashboardContext);
 
   const [entries, setEntries] = useState([]);
   const [chartData, setChartData] = useState([]);

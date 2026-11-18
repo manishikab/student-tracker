@@ -1,7 +1,7 @@
 import { useContext, useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
-import { DashboardContext } from "../DashboardContext";
+import { DashboardContext } from "../DashboardContextValue";
 import "../CalendarPage.css";
 
 const API_URL = import.meta.env.VITE_FASTAPI_URL;

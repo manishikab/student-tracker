@@ -21,5 +21,9 @@ def get_wellness_entries(db: Session = Depends(database.get_db)):
 @router.delete("/{wellness_id}")
 def delete_wellness_entry(wellness_id: int, db: Session = Depends(database.get_db)):
     entry = db.query(models.WellnessEntry).filter(models.WellnessEntry.id == wellness_id).first()
+    if not entry:
+        raise HTTPException(status_code=404, detail="Wellness entry not found")
+
     db.delete(entry)
     db.commit()
+    return {"message": "Wellness entry deleted"}

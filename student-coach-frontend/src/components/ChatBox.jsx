@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { DashboardContext } from '../DashboardContext';
+import { DashboardContext } from '../DashboardContextValue';
 import '../Chatbox.css';
 import { EXPRESS_URL } from '../config.js';
 

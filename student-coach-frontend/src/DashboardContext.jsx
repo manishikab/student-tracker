@@ -1,8 +1,9 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { getTodos } from "./api/todoApi";
 import { getExerciseEntries } from "./api/exerciseApi";
 import { getSleepEntries } from "./api/sleepApi";
 import { getWellnessEntries } from "./api/wellnessAPI";
+import { DashboardContext } from "./DashboardContextValue";
 
 // helper: normalize JS Date → YYYY-MM-DD in local time
 const toLocalDate = (d) => {
@@ -10,8 +11,6 @@ const toLocalDate = (d) => {
   dt.setMinutes(dt.getMinutes() - dt.getTimezoneOffset());
   return dt.toISOString().split("T")[0];
 };
-
-export const DashboardContext = createContext();
 
 export function DashboardProvider({ children }) {
   const [todoTasks, setTodoTasks] = useState([]);

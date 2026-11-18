@@ -21,5 +21,9 @@ def get_exercise_entries(db: Session = Depends(database.get_db)):
 @router.delete("/{exercise_id}")
 def delete_exercise_entry(exercise_id: int, db: Session = Depends(database.get_db)):
     entry = db.query(models.ExerciseEntry).filter(models.ExerciseEntry.id == exercise_id).first()
+    if not entry:
+        raise HTTPException(status_code=404, detail="Exercise entry not found")
+
     db.delete(entry)
     db.commit()
+    return {"message": "Exercise entry deleted"}

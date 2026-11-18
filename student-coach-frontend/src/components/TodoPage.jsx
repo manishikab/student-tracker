@@ -1,13 +1,13 @@
 import styles from "../TodoPage.module.css";
 import React, { useState, useEffect, useContext } from "react";
-import { DashboardContext } from "../DashboardContext";
+import { DashboardContext } from "../DashboardContextValue";
 import AiAssistant from "../components/AiAssistant.jsx";
 
 // Use deployed FastAPI URL from env
 const API_URL = import.meta.env.VITE_FASTAPI_URL;
 
 export default function TodoPage() {
-  const { todoTasks, setTodoTasks } = useContext(DashboardContext);
+  const { setTodoTasks } = useContext(DashboardContext);
 
   const [todos, setTodos] = useState([]);
   const [newTodo, setNewTodo] = useState("");

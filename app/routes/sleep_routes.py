@@ -38,5 +38,9 @@ def weekly_average(db: Session = Depends(database.get_db)):
 @router.delete("/{sleep_id}")
 def delete_sleep(sleep_id: int, db: Session = Depends(database.get_db)):
     entry = db.query(models.SleepEntry).filter(models.SleepEntry.id == sleep_id).first()
+    if not entry:
+        raise HTTPException(status_code=404, detail="Sleep entry not found")
+
     db.delete(entry)
     db.commit()
+    return {"message": "Sleep entry deleted"}

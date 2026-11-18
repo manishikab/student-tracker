@@ -1,5 +1,5 @@
 import { useContext, useState, useEffect } from "react";
-import { DashboardContext } from "../DashboardContext";
+import { DashboardContext } from "../DashboardContextValue";
 import styles from "../AIAssistant.module.css";
 import { EXPRESS_URL } from "../config.js";
 

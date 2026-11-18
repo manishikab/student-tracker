@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import date, datetime
 from typing import Optional
 
@@ -20,8 +20,7 @@ class Todo(TodoBase):
     id: int
     completed: bool
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 # Sleep schemas
 class SleepEntryBase(BaseModel):
@@ -35,8 +34,7 @@ class SleepEntryCreate(SleepEntryBase):
 class SleepEntry(SleepEntryBase):
     id: int
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 # Wellness schemas
 class WellnessEntryBase(BaseModel):
@@ -51,8 +49,7 @@ class WellnessEntryCreate(WellnessEntryBase):
 class WellnessEntry(WellnessEntryBase):
     id: int
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Exercise schemas
@@ -68,8 +65,7 @@ class ExerciseEntryCreate(ExerciseEntryBase):
 class ExerciseEntry(ExerciseEntryBase):
     id: int
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 # Homepage Schemas
 class GoalBase(BaseModel):
@@ -83,5 +79,4 @@ class Goal(GoalBase):
     id: int
     created_at: datetime
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

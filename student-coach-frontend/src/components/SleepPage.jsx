@@ -1,6 +1,6 @@
 import styles from "../SleepPage.module.css";
 import { useState, useEffect, useContext } from "react";
-import { DashboardContext } from "../DashboardContext";
+import { DashboardContext } from "../DashboardContextValue";
 import AiAssistant from "../components/AiAssistant.jsx";
 import {
   LineChart,
@@ -15,7 +15,7 @@ import {
 const API_URL = import.meta.env.VITE_FASTAPI_URL;
 
 export default function SleepPage() {
-  const { sleepEntries, setSleepEntries } = useContext(DashboardContext);
+  const { setSleepEntries } = useContext(DashboardContext);
 
   const [sleeps, setSleeps] = useState([]);
   const [hours, setHours] = useState("");
